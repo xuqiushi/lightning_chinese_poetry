@@ -34,8 +34,17 @@ class OneSentenceLoader:
             directory=directory, dataset_type=DatasetType.TEST
         )
         self.test_dataset = IterableWrapper(self.test_dataset).map(self.transform)
-        self.train_loader = DataLoader(self.train_dataset, batch_size=32, collate_fn=self.pad_collate)
-        self.test_loader = DataLoader(self.test_dataset, batch_size=1024, collate_fn=self.pad_collate)
+        self.train_loader = DataLoader(
+            self.train_dataset,
+            batch_size=32,
+            collate_fn=self.pad_collate,
+            num_workers=6,
+            pin_memory=True,
+            prefetch_factor=16,
+        )
+        self.test_loader = DataLoader(
+            self.test_dataset, batch_size=1024, collate_fn=self.pad_collate
+        )
 
     def transform(self, iter_item: Tuple[str, str]):
         return self.t_sequential(iter_item[0]), self.t_sequential(iter_item[1])

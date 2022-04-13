@@ -8,4 +8,4 @@ dist
 data
 .ipynb_checkpoints
 settings.yaml
-.zip
+*.zip
