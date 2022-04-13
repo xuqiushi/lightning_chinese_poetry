@@ -1,0 +1,11 @@
+.idea
+cmake-build-*
+c_dynamic_library
+tmp
+__pycache__
+.DS_Store
+dist
+data
+.ipynb_checkpoints
+settings.yaml
+.zip
