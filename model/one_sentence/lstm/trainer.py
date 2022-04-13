@@ -31,7 +31,9 @@ class Trainer:
         epoch_loss = 0
         net_model.train()
         count = 0
-        for batch_index, (src, tar) in enumerate(tqdm(iterator, total=train_record_count)):
+        for batch_index, (src, tar) in enumerate(
+            tqdm(iterator, total=train_record_count)
+        ):
             optimizer.zero_grad()
             output = net_model(src, tar)
             output_dim = output.shape[-1]
@@ -78,8 +80,8 @@ class Trainer:
 
 
 if __name__ == "__main__":
-    torch.multiprocessing.set_start_method('spawn')
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    torch.multiprocessing.set_start_method("spawn")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     vocab = VocabLoader(CustomDataset(TANG_SONG_SHI_DIRECTORY)).load_model()
     INPUT_DIM = len(vocab)
     OUTPUT_DIM = len(vocab)
@@ -100,7 +102,7 @@ if __name__ == "__main__":
         decode_dropout=DEC_DROPOUT,
         hid_dim=HID_DIM,
         n_layers=N_LAYERS,
-        device=device
+        device=device,
     ).to(device)
     test_data_loader = OneSentenceLoader(TANG_SONG_SHI_DIRECTORY, device=device)
     test_model.apply(Trainer.init_weights)
@@ -122,7 +124,7 @@ if __name__ == "__main__":
             test_optimizer,
             test_criterion,
             CLIP,
-            test_train_record_count / 128
+            test_train_record_count / 128,
         )
         test_valid_loss = Trainer.evaluate(
             test_model, test_data_loader.test_loader, test_criterion
@@ -134,14 +136,16 @@ if __name__ == "__main__":
 
         if test_valid_loss < best_valid_loss:
             best_valid_loss = test_valid_loss
-            torch.save(
-                test_model.state_dict(),
-                DirectoryChanger.get_new_root_directory(
-                    pathlib.Path(__file__).absolute(),
-                    config.directories.base_dir,
-                    config.directories.data_dir,
-                ),
-                "tut1-model.pt",
+            str(
+                torch.save(
+                    test_model.state_dict(),
+                    DirectoryChanger.get_new_root_directory(
+                        pathlib.Path(__file__).absolute(),
+                        config.directories.base_dir,
+                        config.directories.data_dir,
+                    )
+                    / "tut1-model.pt",
+                )
             )
 
         print(f"Epoch: {epoch + 1:02} | Time: {epoch_minutes}m {epoch_secs}s")
