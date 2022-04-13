@@ -39,7 +39,7 @@ class OneSentenceLoader:
             batch_size=32,
             collate_fn=self.pad_collate,
             num_workers=6,
-            pin_memory=True,
+            # pin_memory=True,
             prefetch_factor=2,
         )
         self.test_loader = DataLoader(
