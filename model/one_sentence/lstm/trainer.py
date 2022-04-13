@@ -55,7 +55,7 @@ class Trainer:
 
         count = 0
         with torch.no_grad():
-            for i, (src, tar) in enumerate(iterator):
+            for i, (src, tar) in enumerate(tqdm(iterator, total=1500)):
 
                 output = net_model(src, tar, 0)  # turn off teacher forcing
 

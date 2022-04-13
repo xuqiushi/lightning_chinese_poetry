@@ -43,7 +43,7 @@ class OneSentenceLoader:
             prefetch_factor=3,
         )
         self.test_loader = DataLoader(
-            self.test_dataset, batch_size=1024, collate_fn=self.pad_collate
+            self.test_dataset, batch_size=128, collate_fn=self.pad_collate
         )
 
     def transform(self, iter_item: Tuple[str, str]):
