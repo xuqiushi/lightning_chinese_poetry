@@ -73,6 +73,7 @@ class Trainer:
 
 
 if __name__ == "__main__":
+    torch.multiprocessing.set_start_method('spawn')
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     vocab = VocabLoader(CustomDataset(TANG_SONG_SHI_DIRECTORY)).load_model()
     INPUT_DIM = len(vocab)
