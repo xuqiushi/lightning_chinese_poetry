@@ -36,11 +36,11 @@ class OneSentenceLoader:
         self.test_dataset = IterableWrapper(self.test_dataset).map(self.transform)
         self.train_loader = DataLoader(
             self.train_dataset,
-            batch_size=32,
+            batch_size=128,
             collate_fn=self.pad_collate,
-            num_workers=6,
+            num_workers=4,
             # pin_memory=True,
-            prefetch_factor=2,
+            prefetch_factor=3,
         )
         self.test_loader = DataLoader(
             self.test_dataset, batch_size=1024, collate_fn=self.pad_collate

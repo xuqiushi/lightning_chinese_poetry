@@ -6,6 +6,7 @@ import torch
 from torch import nn, optim
 
 from lightning_fast.tools.path_tools.directory_changer import DirectoryChanger
+from tqdm import tqdm
 
 from etl.etl_contants import TANG_SONG_SHI_DIRECTORY
 from etl.one_sentence.components.vocab_loader import VocabLoader, PADDING
@@ -26,10 +27,10 @@ class Trainer:
         return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
     @classmethod
-    def train(cls, net_model, iterator, optimizer, criterion, clip):
+    def train(cls, net_model, iterator, optimizer, criterion, clip, train_record_count):
         epoch_loss = 0
         net_model.train()
-        for batch_index, (src, tar) in enumerate(iterator):
+        for batch_index, (src, tar) in enumerate(tqdm(iterator, total=train_record_count)):
             optimizer.zero_grad()
             output = net_model(src, tar)
             output_dim = output.shape[-1]
@@ -105,15 +106,8 @@ if __name__ == "__main__":
     test_optimizer = optim.Adam(test_model.parameters())
     trg_pad_idx = test_data_loader.vocab[PADDING]
     test_criterion = nn.CrossEntropyLoss(ignore_index=trg_pad_idx)
-    Trainer.train(
-        test_model,
-        test_data_loader.train_loader,
-        test_optimizer,
-        test_criterion,
-        clip=CLIP,
-    )
     best_valid_loss = float("inf")
-
+    test_train_record_count = test_data_loader.data_info.record_count
     for epoch in range(N_EPOCHS):
 
         test_start_time = time.time()
@@ -124,6 +118,7 @@ if __name__ == "__main__":
             test_optimizer,
             test_criterion,
             CLIP,
+            test_train_record_count
         )
         test_valid_loss = Trainer.evaluate(
             test_model, test_data_loader.test_loader, test_criterion
