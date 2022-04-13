@@ -30,6 +30,7 @@ class Trainer:
     def train(cls, net_model, iterator, optimizer, criterion, clip, train_record_count):
         epoch_loss = 0
         net_model.train()
+        count = 0
         for batch_index, (src, tar) in enumerate(tqdm(iterator, total=train_record_count)):
             optimizer.zero_grad()
             output = net_model(src, tar)
@@ -41,7 +42,8 @@ class Trainer:
             torch.nn.utils.clip_grad_norm_(net_model.parameters(), clip)
             optimizer.step()
             epoch_loss += loss.item()
-        return epoch_loss / train_record_count
+            count += 1
+        return epoch_loss / count
 
     @classmethod
     def evaluate(cls, net_model, iterator, criterion):
@@ -49,6 +51,7 @@ class Trainer:
 
         epoch_loss = 0
 
+        count = 0
         with torch.no_grad():
             for i, (src, tar) in enumerate(iterator):
 
@@ -62,8 +65,9 @@ class Trainer:
                 loss = criterion(output, tar)
 
                 epoch_loss += loss.item()
+                count += 1
 
-        return epoch_loss / len(iterator)
+        return epoch_loss / count
 
     @classmethod
     def epoch_time(cls, start_time, end_time):
