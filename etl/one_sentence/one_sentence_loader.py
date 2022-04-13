@@ -57,4 +57,4 @@ class OneSentenceLoader:
         xx_pad = pad_sequence(xx, batch_first=True, padding_value=0)
         yy_pad = pad_sequence(yy, batch_first=True, padding_value=0)
 
-        return xx_pad.to(self.device), yy_pad.to(self.device)
+        return xx_pad, yy_pad
