@@ -52,14 +52,14 @@ class Trainer:
         with torch.no_grad():
             for i, (src, tar) in enumerate(iterator):
 
-                output = net_model(src, trg, 0)  # turn off teacher forcing
+                output = net_model(src, tar, 0)  # turn off teacher forcing
 
                 output_dim = output.shape[-1]
 
                 output = output[:, 1:, :].reshape(-1, output_dim)
-                trg = trg[:, 1:].reshape(-1)
+                tar = tar[:, 1:].reshape(-1)
 
-                loss = criterion(output, trg)
+                loss = criterion(output, tar)
 
                 epoch_loss += loss.item()
 
