@@ -41,7 +41,7 @@ class Trainer:
             torch.nn.utils.clip_grad_norm_(net_model.parameters(), clip)
             optimizer.step()
             epoch_loss += loss.item()
-        return epoch_loss / len(iterator)
+        return epoch_loss / train_record_count
 
     @classmethod
     def evaluate(cls, net_model, iterator, criterion):
@@ -118,7 +118,7 @@ if __name__ == "__main__":
             test_optimizer,
             test_criterion,
             CLIP,
-            test_train_record_count
+            test_train_record_count / 128
         )
         test_valid_loss = Trainer.evaluate(
             test_model, test_data_loader.test_loader, test_criterion
