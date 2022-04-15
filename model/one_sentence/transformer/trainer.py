@@ -151,20 +151,33 @@ class Trainer:
         for i, (src, trg) in enumerate(
             tqdm(data_loader.train_loader, total=data_loader.train_record_count / BATCH_SIZE)
         ):
+            start = time.time()
             src = src.to(device, non_blocking=True).long()
+            print(1, time.time() - start)
             trg = trg.to(device, non_blocking=True).long()
+            print(1, time.time() - start)
             # optimizer.zero_grad()
             for param in model.parameters():
                 param.grad = None
+            print(1, time.time() - start)
             output, _ = model(src, trg[:, :-1])
+            print(2, time.time() - start)
             output_dim = output.shape[-1]
+            print(3, time.time() - start)
             output = output.contiguous().view(-1, output_dim)
+            print(4, time.time() - start)
             trg = trg[:, 1:].contiguous().view(-1)
+            print(5, time.time() - start)
             loss = criterion(output, trg)
+            print(6, time.time() - start)
             loss.backward()
+            print(7, time.time() - start)
             torch.nn.utils.clip_grad_norm_(model.parameters(), CLIP)
+            print(8, time.time() - start)
             optimizer.step()
+            print(9, time.time() - start)
             epoch_loss += loss.detach()
+            print(10, time.time() - start)
 
         epoch_loss = epoch_loss.item()
         return epoch_loss / data_loader.train_record_count * BATCH_SIZE
