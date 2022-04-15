@@ -29,7 +29,7 @@ ENC_DROPOUT = 0.1
 DEC_DROPOUT = 0.1
 LEARNING_RATE = 0.0005
 CLIP = 1
-BATCH_SIZE = 128
+BATCH_SIZE = 1024
 EPOCHS = 10
 
 
@@ -149,7 +149,7 @@ class Trainer:
         model.train()
         epoch_loss = 0
         for i, (src, trg) in enumerate(
-            data_loader.train_loader
+            tqdm(data_loader.train_loader, total=data_loader.train_record_count / BATCH_SIZE)
         ):
             src = src.to(device)
             trg = trg.to(device)
