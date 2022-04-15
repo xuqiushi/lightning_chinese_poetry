@@ -17,6 +17,7 @@ from model.one_sentence.transformer.net.decoder import Decoder
 from model.one_sentence.transformer.net.encoder import Encoder
 from model.one_sentence.transformer.net.seq2seq import Seq2Seq
 
+STR_MAX_LENGTH = 100
 HID_DIM = 256
 ENC_LAYERS = 3
 DEC_LAYERS = 3
@@ -51,6 +52,7 @@ class Trainer:
             val_batch_size=BATCH_SIZE,
             val_pre_fetch_factor=2,
             device=self.device,
+            str_max_length=STR_MAX_LENGTH
         )
 
         self.model = None
@@ -92,6 +94,7 @@ class Trainer:
             ENC_PF_DIM,
             ENC_DROPOUT,
             self.device,
+            STR_MAX_LENGTH
         )
         dec = Decoder(
             self.trg_dim,
@@ -101,6 +104,7 @@ class Trainer:
             DEC_PF_DIM,
             DEC_DROPOUT,
             self.device,
+            STR_MAX_LENGTH
         )
         self.model = Seq2Seq(
             enc, dec, self.src_pad_idx, self.trg_pad_idx, self.device

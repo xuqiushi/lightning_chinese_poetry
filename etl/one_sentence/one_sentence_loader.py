@@ -25,6 +25,7 @@ class OneSentenceLoader:
         val_pre_fetch_factor: int,
         device: torch.device,
         train_test_ratio: float = 0.7,
+        str_max_length: int = 100,
     ):
         self.device = device
         self.vocab = VocabLoader(
@@ -38,6 +39,7 @@ class OneSentenceLoader:
             torch_transform.VocabTransform(self.vocab),
             torch_transform.AddToken(token=self.vocab[BOS], begin=True),
             torch_transform.AddToken(token=self.vocab[EOS], begin=False),
+            torch_transform.Truncate(str_max_length),
             torch_transform.ToTensor(PADDING),
         )
         self.train_dataset = CustomIterableDataset(
