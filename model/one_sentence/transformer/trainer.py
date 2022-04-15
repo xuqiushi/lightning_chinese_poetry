@@ -46,10 +46,10 @@ class Trainer:
             directory=self.data_directory,
             train_n_workers=4,
             train_batch_size=BATCH_SIZE,
-            train_pre_fetch_factor=1,
+            train_pre_fetch_factor=4,
             val_n_workers=4,
             val_batch_size=BATCH_SIZE,
-            val_pre_fetch_factor=1,
+            val_pre_fetch_factor=4,
             device=self.device,
         )
 
