@@ -44,9 +44,7 @@ class Encoder(nn.Module):
                 for _ in range(n_layers)
             ]
         )
-        self.scale = torch.sqrt(torch.FloatTensor([hid_dim])).to(
-            device
-        )  # pos_embedding需要乘以这个，据说可以减少方差
+        self.scale = torch.sqrt(torch.FloatTensor([hid_dim], device=device))  # pos_embedding需要乘以这个，据说可以减少方差
 
     def forward(self, src: torch.Tensor, src_mask: torch.Tensor):
         """
