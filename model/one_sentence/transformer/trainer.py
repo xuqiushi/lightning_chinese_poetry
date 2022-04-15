@@ -106,9 +106,9 @@ class Trainer:
             self.device,
             STR_MAX_LENGTH
         )
-        self.model = Seq2Seq(
+        self.model = torch.jit.script(Seq2Seq(
             enc, dec, self.src_pad_idx, self.trg_pad_idx, self.device
-        ).to(self.device)
+        )).to(self.device)
         self.count_parameters(self.model)
         self.model.apply(self.initialize_weights)
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=LEARNING_RATE)
@@ -164,7 +164,7 @@ class Trainer:
             optimizer.step()
             epoch_loss += loss.item()
 
-        return epoch_loss / data_loader.train_record_count / BATCH_SIZE
+        return epoch_loss / data_loader.train_record_count * BATCH_SIZE
 
     @classmethod
     def evaluate(cls, model: Seq2Seq, data_loader: OneSentenceLoader, criterion: CrossEntropyLoss, device: torch.device):
@@ -180,7 +180,7 @@ class Trainer:
                 trg = trg[:, 1:].contiguous().view(-1)
                 loss = criterion(output, trg)
                 epoch_loss += loss.item()
-        return epoch_loss / data_loader.val_record_count / BATCH_SIZE
+        return epoch_loss / data_loader.val_record_count * BATCH_SIZE
 
 
 if __name__ == "__main__":

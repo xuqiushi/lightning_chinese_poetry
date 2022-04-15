@@ -34,14 +34,14 @@ class OneSentenceLoader:
         self.data_info = DataInfoLoader(
             CustomIterableDataset(directory=directory)
         ).load_model()
-        self.t_sequential = torch_transform.Sequential(
+        self.t_sequential = torch.jit.script(torch_transform.Sequential(
             CharacterTokenizer(),
             torch_transform.VocabTransform(self.vocab),
             torch_transform.AddToken(token=self.vocab[BOS], begin=True),
             torch_transform.AddToken(token=self.vocab[EOS], begin=False),
             torch_transform.Truncate(str_max_length),
             torch_transform.ToTensor(PADDING),
-        )
+        ))
         self.train_dataset = CustomIterableDataset(
             directory=directory,
             dataset_type=DatasetType.TRAIN,
