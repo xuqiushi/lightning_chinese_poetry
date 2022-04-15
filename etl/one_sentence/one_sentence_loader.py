@@ -57,7 +57,7 @@ class OneSentenceLoader:
             batch_size=train_batch_size,
             collate_fn=self.pad_collate,
             num_workers=train_n_workers,
-            # pin_memory=True,
+            pin_memory=True,
             prefetch_factor=train_pre_fetch_factor,
         )
         self.train_record_count = self.data_info.record_count * train_test_ratio
