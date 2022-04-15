@@ -148,7 +148,9 @@ class Trainer:
     ):
         model.train()
         epoch_loss = torch.tensor([0.0], device=device)
-        for src, trg in data_loader.train_loader:
+        for i, (src, trg) in enumerate(
+            tqdm(data_loader.train_loader, total=data_loader.train_record_count / BATCH_SIZE)
+        ):
             src = src.to(device, non_blocking=True).long()
             trg = trg.to(device, non_blocking=True).long()
             # optimizer.zero_grad()
