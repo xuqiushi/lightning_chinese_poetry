@@ -118,8 +118,8 @@ class Trainer:
 
             start_time = time.time()
 
-            train_loss = self.train(self.model, self.data_loader, self.optimizer, self.criterion)
-            valid_loss = self.evaluate(self.model, self.data_loader, self.criterion)
+            train_loss = self.train(self.model, self.data_loader, self.optimizer, self.criterion, self.device)
+            valid_loss = self.evaluate(self.model, self.data_loader, self.criterion, self.device)
 
             end_time = time.time()
 
@@ -140,12 +140,15 @@ class Trainer:
         data_loader: OneSentenceLoader,
         optimizer: torch.optim.Adam,
         criterion: CrossEntropyLoss,
+        device: torch.device
     ):
         model.train()
         epoch_loss = 0
         for i, (src, trg) in enumerate(
             tqdm(data_loader.train_loader, total=data_loader.train_record_count / BATCH_SIZE)
         ):
+            src = src.to(device)
+            trg = trg.to(device)
             optimizer.zero_grad()
             output, _ = model(src, trg[:, :-1])
             output_dim = output.shape[-1]
@@ -160,11 +163,13 @@ class Trainer:
         return epoch_loss / data_loader.train_record_count / BATCH_SIZE
 
     @classmethod
-    def evaluate(cls, model: Seq2Seq, data_loader: OneSentenceLoader, criterion: CrossEntropyLoss):
+    def evaluate(cls, model: Seq2Seq, data_loader: OneSentenceLoader, criterion: CrossEntropyLoss, device: torch.device):
         model.eval()
         epoch_loss = 0
         with torch.no_grad():
             for i, (src, trg) in enumerate(tqdm(data_loader.val_loader, total=data_loader.val_record_count / BATCH_SIZE)):
+                src = src.to(device)
+                trg = trg.to(device)
                 output, _ = model(src, trg[:, :-1])
                 output_dim = output.shape[-1]
                 output = output.contiguous().view(-1, output_dim)
