@@ -2,7 +2,6 @@ import random
 
 import torch.nn
 from torch import nn
-from torch.nn.utils.rnn import pad_sequence
 
 
 class Net(nn.Module):

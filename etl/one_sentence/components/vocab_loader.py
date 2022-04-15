@@ -10,7 +10,7 @@ from etl.one_sentence.components.base.trainable_component_loader import (
 )
 
 from etl.one_sentence.components.character_tokenizer import CharacterTokenizer
-from etl.one_sentence.custom_dataset import CustomDataset
+from etl.one_sentence.custom_iterable_dataset import CustomIterableDataset
 
 UNKNOWN = "<unk>"
 BOS = "<bos>"
@@ -19,7 +19,7 @@ EOS = "<eos>"
 
 
 class VocabLoader(TrainableComponentLoader[Vocab]):
-    def __init__(self, dataset: CustomDataset, rebuild: bool = False):
+    def __init__(self, dataset: CustomIterableDataset, rebuild: bool = False):
         super(VocabLoader, self).__init__(rebuild)
         self.dataset = dataset
         self.tokenizer = CharacterTokenizer()
@@ -47,6 +47,6 @@ class VocabLoader(TrainableComponentLoader[Vocab]):
 
 
 if __name__ == "__main__":
-    test_dataset = CustomDataset(TANG_SONG_SHI_DIRECTORY)
+    test_dataset = CustomIterableDataset(TANG_SONG_SHI_DIRECTORY)
     test_vocab_builder = VocabLoader(test_dataset, rebuild=True)
     test_vocab = test_vocab_builder.load_model()

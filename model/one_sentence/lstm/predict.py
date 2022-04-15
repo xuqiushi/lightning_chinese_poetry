@@ -2,7 +2,7 @@ import torch
 
 from etl.etl_contants import TANG_SONG_SHI_DIRECTORY
 from etl.one_sentence.components.vocab_loader import BOS, EOS, VocabLoader
-from etl.one_sentence.custom_dataset import CustomDataset
+from etl.one_sentence.custom_iterable_dataset import CustomIterableDataset
 from etl.one_sentence.one_sentence_loader import OneSentenceLoader
 from model.one_sentence.lstm.net import Net
 
@@ -12,41 +12,29 @@ class Predict:
     def predict_sentence(cls, sentence, t_transform, vocab, model, device, max_len=50):
 
         model.eval()
-
         src_indexes = t_transform(sentence)
-
         src_tensor = torch.LongTensor(src_indexes).unsqueeze(0).to(device)
-
-        src_len = torch.LongTensor([len(src_indexes)])
 
         with torch.no_grad():
             hidden, cell = model.encoder(src_tensor)
-
         trg_indexes = [vocab[BOS]]
 
         for i in range(max_len):
-
             trg_tensor = torch.LongTensor([trg_indexes[-1]]).to(device)
-
             with torch.no_grad():
                 output, hidden, cell = model.decoder(trg_tensor, hidden, cell)
-
             pred_token = output.argmax(1).item()
-
             trg_indexes.append(pred_token)
-
             if pred_token == vocab[EOS]:
                 break
-
         trg_tokens = [vocab.lookup_token(i) for i in trg_indexes]
-
         return trg_tokens[1:]
 
 
 if __name__ == "__main__":
     test_device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     test_data_loader = OneSentenceLoader(TANG_SONG_SHI_DIRECTORY, device=test_device)
-    vocab = VocabLoader(CustomDataset(TANG_SONG_SHI_DIRECTORY)).load_model()
+    vocab = VocabLoader(CustomIterableDataset(TANG_SONG_SHI_DIRECTORY)).load_model()
     INPUT_DIM = len(vocab)
     OUTPUT_DIM = len(vocab)
     ENC_EMB_DIM = 256
@@ -96,8 +84,7 @@ if __name__ == "__main__":
         "風不起，",
         "得一夢來三事應，",
         "天生我材必有用，",
-        "十金易一筆，"
-
+        "十金易一筆，",
     ]
     for test_string in test_string_list:
         predict_string = "".join(

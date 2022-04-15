@@ -6,11 +6,11 @@ from etl.one_sentence.components.base.trainable_component_loader import (
     TrainableComponentLoader,
     ModelType,
 )
-from etl.one_sentence.custom_dataset import CustomDataset
+from etl.one_sentence.custom_iterable_dataset import CustomIterableDataset
 
 
 class SentencePieceLoader(TrainableComponentLoader[any]):
-    def __init__(self, dataset: CustomDataset, rebuild: bool = False):
+    def __init__(self, dataset: CustomIterableDataset, rebuild: bool = False):
         super(SentencePieceLoader, self).__init__(rebuild)
         self.dataset = dataset
         self.rebuild = rebuild
@@ -46,7 +46,7 @@ class SentencePieceLoader(TrainableComponentLoader[any]):
 
 
 if __name__ == "__main__":
-    test_dataset = CustomDataset(TANG_SONG_SHI_DIRECTORY)
+    test_dataset = CustomIterableDataset(TANG_SONG_SHI_DIRECTORY)
     test_sp_builder = SentencePieceLoader(test_dataset, rebuild=False)
     test_sp = test_sp_builder.load_tokenizer()
     print(test_sp("欲出未出光辣達，千山萬山如火發。"))

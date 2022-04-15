@@ -14,13 +14,7 @@ from etl.entity.poetry import Poetry
 from etl.etl_contants import TANG_SONG_SHI_DIRECTORY
 
 
-PADDING_IDX = 1
-BOS_IDX = 0
-EOS_IDX = 2
-MAX_SEQ_LEN = 256
-
-
-class CustomDataset(IterableDataset):
+class CustomIterableDataset(IterableDataset):
     CH_SEP = ",，.。!！?？"
     LOGGER = logging.getLogger("OneSentenceDataset")
 
@@ -99,7 +93,7 @@ class CustomDataset(IterableDataset):
 
 
 if __name__ == "__main__":
-    test_dataset = CustomDataset(TANG_SONG_SHI_DIRECTORY)
+    test_dataset = CustomIterableDataset(TANG_SONG_SHI_DIRECTORY)
     test_one_worker = iter(
         torch.utils.data.DataLoader(test_dataset, num_workers=0, batch_size=1)
     )

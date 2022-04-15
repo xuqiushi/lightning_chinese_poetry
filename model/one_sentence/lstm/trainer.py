@@ -10,7 +10,7 @@ from tqdm import tqdm
 
 from etl.etl_contants import TANG_SONG_SHI_DIRECTORY
 from etl.one_sentence.components.vocab_loader import VocabLoader, PADDING
-from etl.one_sentence.custom_dataset import CustomDataset
+from etl.one_sentence.custom_iterable_dataset import CustomIterableDataset
 from etl.one_sentence.one_sentence_loader import OneSentenceLoader
 from model.one_sentence.lstm.net import Net
 from config import config
@@ -48,14 +48,12 @@ class Trainer:
         return epoch_loss / count
 
     @classmethod
-    def evaluate(cls, net_model, iterator, criterion):
+    def evaluate(cls, net_model, iterator, criterion, val_record_count):
         net_model.eval()
-
         epoch_loss = 0
-
         count = 0
         with torch.no_grad():
-            for i, (src, tar) in enumerate(tqdm(iterator, total=1500)):
+            for i, (src, tar) in enumerate(tqdm(iterator, total=val_record_count)):
 
                 output = net_model(src, tar, 0)  # turn off teacher forcing
 
@@ -82,7 +80,7 @@ class Trainer:
 if __name__ == "__main__":
     torch.multiprocessing.set_start_method("spawn")
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    vocab = VocabLoader(CustomDataset(TANG_SONG_SHI_DIRECTORY)).load_model()
+    vocab = VocabLoader(CustomIterableDataset(TANG_SONG_SHI_DIRECTORY)).load_model()
     INPUT_DIM = len(vocab)
     OUTPUT_DIM = len(vocab)
     ENC_EMB_DIM = 256
@@ -104,7 +102,16 @@ if __name__ == "__main__":
         n_layers=N_LAYERS,
         device=device,
     ).to(device)
-    test_data_loader = OneSentenceLoader(TANG_SONG_SHI_DIRECTORY, device=device)
+    test_data_loader = OneSentenceLoader(
+        directory=TANG_SONG_SHI_DIRECTORY,
+        train_n_workers=4,
+        train_batch_size=128,
+        train_pre_fetch_factor=3,
+        val_n_workers=4,
+        val_batch_size=128,
+        val_pre_fetch_factor=2,
+        device=device,
+    )
     test_model.apply(Trainer.init_weights)
     print(
         f"The model has {Trainer.count_parameters(test_model):,} trainable parameters"
@@ -115,23 +122,22 @@ if __name__ == "__main__":
     best_valid_loss = float("inf")
     test_train_record_count = test_data_loader.data_info.record_count
     for epoch in range(N_EPOCHS):
-
         test_start_time = time.time()
-
         test_train_loss = Trainer.train(
             test_model,
             test_data_loader.train_loader,
             test_optimizer,
             test_criterion,
             CLIP,
-            test_train_record_count / 128,
+            test_data_loader.train_record_count,
         )
         test_valid_loss = Trainer.evaluate(
-            test_model, test_data_loader.test_loader, test_criterion
+            test_model,
+            test_data_loader.val_loader,
+            test_criterion,
+            test_data_loader.val_record_count,
         )
-
         test_end_time = time.time()
-
         epoch_minutes, epoch_secs = Trainer.epoch_time(test_start_time, test_end_time)
 
         if test_valid_loss < best_valid_loss:

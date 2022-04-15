@@ -9,11 +9,11 @@ from etl.one_sentence.components.base.trainable_component_loader import (
     ModelType,
 )
 from etl.one_sentence.components.character_tokenizer import CharacterTokenizer
-from etl.one_sentence.custom_dataset import CustomDataset
+from etl.one_sentence.custom_iterable_dataset import CustomIterableDataset
 
 
 class DataInfoLoader(TrainableComponentLoader[OneSentenceDataInfo]):
-    def __init__(self, dataset: CustomDataset, rebuild: bool = False):
+    def __init__(self, dataset: CustomIterableDataset, rebuild: bool = False):
         super(DataInfoLoader, self).__init__(rebuild)
         self.dataset = dataset
         self.tokenizer = CharacterTokenizer()
@@ -43,6 +43,6 @@ class DataInfoLoader(TrainableComponentLoader[OneSentenceDataInfo]):
 
 
 if __name__ == "__main__":
-    test_dataset = CustomDataset(TANG_SONG_SHI_DIRECTORY)
+    test_dataset = CustomIterableDataset(TANG_SONG_SHI_DIRECTORY)
     test_data_info_loader = DataInfoLoader(test_dataset)
     test_vocab = test_data_info_loader.load_model()
