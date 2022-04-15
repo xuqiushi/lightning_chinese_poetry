@@ -45,12 +45,12 @@ class Trainer:
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.data_loader = OneSentenceLoader(
             directory=self.data_directory,
-            train_n_workers=8,
+            train_n_workers=4,
             train_batch_size=BATCH_SIZE,
-            train_pre_fetch_factor=16,
-            val_n_workers=8,
+            train_pre_fetch_factor=32,
+            val_n_workers=4,
             val_batch_size=BATCH_SIZE,
-            val_pre_fetch_factor=16,
+            val_pre_fetch_factor=8,
             device=self.device,
             str_max_length=STR_MAX_LENGTH
         )
