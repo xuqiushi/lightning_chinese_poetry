@@ -34,7 +34,7 @@ class Seq2Seq(nn.Module):
 
         # [trg len, trg len]生成一个左下角矩阵全是1的矩阵，这样来保证目标单词做自注意力的时候每个词都只能看到他前边的词。
         trg_sub_mask = torch.tril(
-            torch.ones((trg_len, trg_len), device=self.device)
+            torch.ones((trg_len, trg_len))
         ).bool()
 
         # 广播机制先将trg_sub_mask扩展为[1, 1, trg len, trg len], 然后将1扩展。注意广播在增加维度的时候从后向前。
