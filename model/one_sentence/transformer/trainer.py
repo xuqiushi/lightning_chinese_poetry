@@ -151,8 +151,8 @@ class Trainer:
         for i, (src, trg) in enumerate(
             tqdm(data_loader.train_loader, total=data_loader.train_record_count / BATCH_SIZE)
         ):
-            src = src.to(device, non_blocking=True)
-            trg = trg.to(device, non_blocking=True)
+            src = src.to(device, non_blocking=True).long()
+            trg = trg.to(device, non_blocking=True).long()
             # optimizer.zero_grad()
             for param in model.parameters():
                 param.grad = None
