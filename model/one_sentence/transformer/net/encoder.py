@@ -56,7 +56,7 @@ class Encoder(nn.Module):
         src_len = src.shape[1]
         # range(0, src_len) [src_len] -> [1, src_len] -> [batch_size, src_len]
         pos = (
-            torch.arange(0, src_len).unsqueeze(0).repeat(batch_size, 1).to(self.device)
+            torch.arange(0, src_len, device=self.device).unsqueeze(0).repeat(batch_size, 1)
         )
 
         tok_embedding = self.tok_embedding(src) * self.scale
