@@ -18,13 +18,13 @@ from model.one_sentence.transformer.net.encoder import Encoder
 from model.one_sentence.transformer.net.seq2seq import Seq2Seq
 
 STR_MAX_LENGTH = 100
-HID_DIM = 256
-ENC_LAYERS = 3
-DEC_LAYERS = 3
-ENC_HEADS = 8
-DEC_HEADS = 8
-ENC_PF_DIM = 512
-DEC_PF_DIM = 512
+HID_DIM = 512
+ENC_LAYERS = 6
+DEC_LAYERS = 6
+ENC_HEADS = 16
+DEC_HEADS = 16
+ENC_PF_DIM = 1024
+DEC_PF_DIM = 1024
 ENC_DROPOUT = 0.1
 DEC_DROPOUT = 0.1
 LEARNING_RATE = 0.0005
