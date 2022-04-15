@@ -147,7 +147,7 @@ class Trainer:
         device: torch.device
     ):
         model.train()
-        epoch_loss = 0
+        epoch_loss = torch.Tensor([0], device=device)
         for i, (src, trg) in enumerate(
             tqdm(data_loader.train_loader, total=data_loader.train_record_count / BATCH_SIZE)
         ):
@@ -164,8 +164,9 @@ class Trainer:
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), CLIP)
             optimizer.step()
-            epoch_loss += loss.item()
+            epoch_loss += loss.detach()
 
+        epoch_loss = epoch_loss.item()
         return epoch_loss / data_loader.train_record_count * BATCH_SIZE
 
     @classmethod
