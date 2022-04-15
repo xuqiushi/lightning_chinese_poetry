@@ -27,7 +27,7 @@ class MultiHeadAttentionLayer(nn.Module):
         self.fc_v = nn.Linear(hid_dim, hid_dim)
         self.fc_o = nn.Linear(hid_dim, hid_dim)
         self.dropout = nn.Dropout(self.dropout_ratio)
-        self.scale = torch.sqrt(torch.FloatTensor([self.head_dim])).to(device)  # 点积之后进行缩放的比例
+        self.scale = torch.sqrt(torch.tensor([float(hid_dim)], device=device))  # 点积之后进行缩放的比例
 
     def forward(self, query, key, value, mask=None):
         batch_size = query.shape[0]

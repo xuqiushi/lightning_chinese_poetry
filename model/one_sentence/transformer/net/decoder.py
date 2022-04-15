@@ -48,7 +48,7 @@ class Decoder(nn.Module):
 
         self.fc_out = nn.Linear(hid_dim, output_dim)
         self.dropout = nn.Dropout(dropout_ratio)
-        self.scale = torch.sqrt(torch.FloatTensor([hid_dim])).to(device)
+        self.scale = torch.sqrt(torch.tensor([float(hid_dim)], device=device))
 
     def forward(self, trg, enc_src, trg_mask, src_mask):
         """
@@ -61,7 +61,7 @@ class Decoder(nn.Module):
         batch_size = trg.shape[0]
         trg_len = trg.shape[1]
 
-        pos = torch.arange(0, trg_len).unsqueeze(0).repeat(batch_size, 1).to(self.device)
+        pos = torch.arange(0, trg_len, device=self.device).unsqueeze(0).repeat(batch_size, 1)
 
         tok_embedding = self.tok_embedding(trg) * self.scale
         pos_embedding = self.pos_embedding(pos)
