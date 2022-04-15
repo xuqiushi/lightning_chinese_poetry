@@ -106,9 +106,9 @@ class Trainer:
             self.device,
             STR_MAX_LENGTH
         )
-        self.model = torch.jit.script(Seq2Seq(
+        self.model = Seq2Seq(
             enc, dec, self.src_pad_idx, self.trg_pad_idx, self.device
-        )).to(self.device)
+        ).to(self.device)
         self.count_parameters(self.model)
         self.model.apply(self.initialize_weights)
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=LEARNING_RATE)
@@ -149,11 +149,13 @@ class Trainer:
         model.train()
         epoch_loss = 0
         for i, (src, trg) in enumerate(
-            tqdm(data_loader.train_loader, total=data_loader.train_record_count / BATCH_SIZE)
+            data_loader.train_loader
         ):
             src = src.to(device)
             trg = trg.to(device)
-            optimizer.zero_grad()
+            # optimizer.zero_grad()
+            for param in model.parameters():
+                param.grad = None
             output, _ = model(src, trg[:, :-1])
             output_dim = output.shape[-1]
             output = output.contiguous().view(-1, output_dim)
