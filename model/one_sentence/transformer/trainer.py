@@ -147,7 +147,7 @@ class Trainer:
         device: torch.device
     ):
         model.train()
-        epoch_loss = torch.Tensor([0], device=device)
+        epoch_loss = torch.tensor([0], device=device)
         for i, (src, trg) in enumerate(
             tqdm(data_loader.train_loader, total=data_loader.train_record_count / BATCH_SIZE)
         ):
