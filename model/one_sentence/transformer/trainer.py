@@ -29,7 +29,7 @@ ENC_DROPOUT = 0.1
 DEC_DROPOUT = 0.1
 LEARNING_RATE = 0.0005
 CLIP = 1
-BATCH_SIZE = 256
+BATCH_SIZE = 128
 EPOCHS = 10
 
 
@@ -47,10 +47,10 @@ class Trainer:
             directory=self.data_directory,
             train_n_workers=8,
             train_batch_size=BATCH_SIZE,
-            train_pre_fetch_factor=2,
+            train_pre_fetch_factor=16,
             val_n_workers=8,
             val_batch_size=BATCH_SIZE,
-            val_pre_fetch_factor=2,
+            val_pre_fetch_factor=16,
             device=self.device,
             str_max_length=STR_MAX_LENGTH
         )
@@ -83,7 +83,7 @@ class Trainer:
             pathlib.Path(__file__).absolute(),
             config.directories.base_dir,
             config.directories.data_dir,
-        ) / "seq2seq.pt",
+        ) / "seq2seq.pt"
 
     def init_model(self):
         enc = Encoder(
