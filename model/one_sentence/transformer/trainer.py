@@ -108,12 +108,12 @@ class Trainer:
             self.device,
             STR_MAX_LENGTH
         )
-        self.model = Seq2Seq(
+        self.model = torch.jit.script(Seq2Seq(
             enc, dec, self.src_pad_idx, self.trg_pad_idx, self.device
-        ).to(self.device)
+        ).to(self.device))
         self.count_parameters(self.model)
         self.model.apply(self.initialize_weights)
-        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=LEARNING_RATE)
+        self.optimizer = torch.optim.AdamW(self.model.parameters(), lr=LEARNING_RATE)
         self.criterion = nn.CrossEntropyLoss(ignore_index=self.trg_pad_idx)
         self.scaler = GradScaler()
 
