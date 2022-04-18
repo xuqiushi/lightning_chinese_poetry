@@ -108,9 +108,9 @@ class Trainer:
             self.device,
             STR_MAX_LENGTH
         )
-        self.model = Seq2Seq(
+        self.model = torch.jit.script(Seq2Seq(
             enc, dec, self.src_pad_idx, self.trg_pad_idx, self.device
-        ).to(self.device)
+        ).to(self.device))
         self.count_parameters(self.model)
         self.model.apply(self.initialize_weights)
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=LEARNING_RATE)
@@ -155,12 +155,12 @@ class Trainer:
         for i, (src, trg) in enumerate(
             tqdm(data_loader.train_loader, total=data_loader.train_record_count / BATCH_SIZE)
         ):
-            src = src.to(device, non_blocking=True).long()
-            trg = trg.to(device, non_blocking=True).long()
             # optimizer.zero_grad()
             for param in model.parameters():
                 param.grad = None
             with autocast(device.type):
+                src = src.to(device, non_blocking=True).long()
+                trg = trg.to(device, non_blocking=True).long()
                 output, _ = model(src, trg[:, :-1])
                 output_dim = output.shape[-1]
                 output = output.contiguous().view(-1, output_dim)
@@ -198,6 +198,6 @@ if __name__ == "__main__":
     torch.autograd.set_detect_anomaly(False)
     torch.autograd.profiler.profile(False)
     torch.autograd.profiler.emit_nvtx(False)
-    torch.backends.cudnn.benchmark = True
+    # torch.backends.cudnn.benchmark = True
     trainer = Trainer(TANG_SONG_SHI_DIRECTORY)
     trainer.process()
