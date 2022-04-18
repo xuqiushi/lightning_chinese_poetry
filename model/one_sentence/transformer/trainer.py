@@ -195,7 +195,7 @@ class Trainer:
                     output = output.contiguous().view(-1, output_dim)
                     trg = trg[:, 1:].contiguous().view(-1)
                     loss = criterion(output, trg)
-                    loss.backward()
+                    # loss.backward()
                     scaler.scale(loss).backward()
                     scaler.unscale_(optimizer)
                     torch.nn.utils.clip_grad_norm_(model.parameters(), CLIP)
