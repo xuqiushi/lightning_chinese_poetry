@@ -7,7 +7,7 @@ from lightning_fast.tools.path_tools.directory_changer import DirectoryChanger
 from torch import nn, autocast
 from torch.cuda.amp import GradScaler
 from torch.nn.modules.loss import CrossEntropyLoss
-import torch.autograd.profiler as profiler
+from torch.profiler import profile, record_function, ProfilerActivity
 from tqdm import tqdm
 
 from config import config
@@ -19,6 +19,9 @@ from model.one_sentence.transformer.net.decoder import Decoder
 from model.one_sentence.transformer.net.encoder import Encoder
 from model.one_sentence.transformer.net.seq2seq import Seq2Seq
 
+LOG_DIR = config.directories.log_dir / "one_sentence_transformer"
+LOG_DIR.mkdir(exist_ok=True, parents=True)
+torch.profiler.tensorboard_trace_handler(str(LOG_DIR))
 STR_MAX_LENGTH = 100
 HID_DIM = 256
 ENC_LAYERS = 3
@@ -54,7 +57,7 @@ class Trainer:
             val_batch_size=BATCH_SIZE,
             val_pre_fetch_factor=8,
             device=self.device,
-            str_max_length=STR_MAX_LENGTH
+            str_max_length=STR_MAX_LENGTH,
         )
 
         self.model = None
@@ -82,11 +85,14 @@ class Trainer:
 
     @property
     def model_path(self):
-        return DirectoryChanger.get_new_root_directory(
-            pathlib.Path(__file__).absolute(),
-            config.directories.base_dir,
-            config.directories.data_dir,
-        ) / "seq2seq.pt"
+        return (
+            DirectoryChanger.get_new_root_directory(
+                pathlib.Path(__file__).absolute(),
+                config.directories.base_dir,
+                config.directories.data_dir,
+            )
+            / "seq2seq.pt"
+        )
 
     def init_model(self):
         enc = Encoder(
@@ -97,7 +103,7 @@ class Trainer:
             ENC_PF_DIM,
             ENC_DROPOUT,
             self.device,
-            STR_MAX_LENGTH
+            STR_MAX_LENGTH,
         )
         dec = Decoder(
             self.trg_dim,
@@ -107,11 +113,13 @@ class Trainer:
             DEC_PF_DIM,
             DEC_DROPOUT,
             self.device,
-            STR_MAX_LENGTH
+            STR_MAX_LENGTH,
         )
-        self.model = torch.jit.script(Seq2Seq(
-            enc, dec, self.src_pad_idx, self.trg_pad_idx, self.device
-        ).to(self.device))
+        self.model = torch.jit.script(
+            Seq2Seq(enc, dec, self.src_pad_idx, self.trg_pad_idx, self.device).to(
+                self.device
+            )
+        )
         self.count_parameters(self.model)
         self.model.apply(self.initialize_weights)
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=LEARNING_RATE)
@@ -121,13 +129,22 @@ class Trainer:
     def process(self):
         torch.multiprocessing.set_start_method("spawn")
         self.init_model()
-        best_valid_loss = float('inf')
+        best_valid_loss = float("inf")
         for epoch in range(EPOCHS):
 
             start_time = time.time()
 
-            train_loss = self.train(self.model, self.data_loader, self.optimizer, self.criterion, self.device, self.scaler)
-            valid_loss = self.evaluate(self.model, self.data_loader, self.criterion, self.device)
+            train_loss = self.train(
+                self.model,
+                self.data_loader,
+                self.optimizer,
+                self.criterion,
+                self.device,
+                self.scaler,
+            )
+            valid_loss = self.evaluate(
+                self.model, self.data_loader, self.criterion, self.device
+            )
 
             end_time = time.time()
 
@@ -137,9 +154,13 @@ class Trainer:
                 best_valid_loss = valid_loss
                 torch.save(self.model.state_dict(), str(self.model_path))
 
-            print(f'Epoch: {epoch + 1:02} | Time: {epoch_mins}m {epoch_secs}s')
-            print(f'\tTrain Loss: {train_loss:.3f} | Train PPL: {math.exp(train_loss):7.3f}')
-            print(f'\t Val. Loss: {valid_loss:.3f} |  Val. PPL: {math.exp(valid_loss):7.3f}')
+            print(f"Epoch: {epoch + 1:02} | Time: {epoch_mins}m {epoch_secs}s")
+            print(
+                f"\tTrain Loss: {train_loss:.3f} | Train PPL: {math.exp(train_loss):7.3f}"
+            )
+            print(
+                f"\t Val. Loss: {valid_loss:.3f} |  Val. PPL: {math.exp(valid_loss):7.3f}"
+            )
 
     @classmethod
     def train(
@@ -149,12 +170,15 @@ class Trainer:
         optimizer: torch.optim.Adam,
         criterion: CrossEntropyLoss,
         device: torch.device,
-        scaler: GradScaler
+        scaler: GradScaler,
     ):
         model.train()
         epoch_loss = torch.tensor([0.0], device=device)
         for i, (src, trg) in enumerate(
-            tqdm(data_loader.train_loader, total=data_loader.train_record_count / BATCH_SIZE)
+            tqdm(
+                data_loader.train_loader,
+                total=data_loader.train_record_count / BATCH_SIZE,
+            )
         ):
             # optimizer.zero_grad()
             for param in model.parameters():
@@ -162,10 +186,18 @@ class Trainer:
             # with autocast(device.type):
             src = src.to(device, non_blocking=True).long()
             trg = trg.to(device, non_blocking=True).long()
-            with profiler.profile(record_shapes=True, use_cuda=torch.cuda.is_available()) as prof:
-                with profiler.record_function("model_inference"):
+            with profile(
+                activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
+                profile_memory=True,
+                record_shapes=True,
+            ) as prof:
+                with record_function("model_inference"):
                     output, _ = model(src, trg[:, :-1])
-            print(prof.key_averages(group_by_input_shape=True).table(sort_by="cpu_time_total", row_limit=10))
+            # print(
+            #     prof.key_averages(group_by_input_shape=True).table(
+            #         sort_by="cpu_time_total", row_limit=10
+            #     )
+            # )
             output_dim = output.shape[-1]
             output = output.contiguous().view(-1, output_dim)
             trg = trg[:, 1:].contiguous().view(-1)
@@ -183,11 +215,22 @@ class Trainer:
         return epoch_loss / data_loader.train_record_count * BATCH_SIZE
 
     @classmethod
-    def evaluate(cls, model: Seq2Seq, data_loader: OneSentenceLoader, criterion: CrossEntropyLoss, device: torch.device):
+    def evaluate(
+        cls,
+        model: Seq2Seq,
+        data_loader: OneSentenceLoader,
+        criterion: CrossEntropyLoss,
+        device: torch.device,
+    ):
         model.eval()
         epoch_loss = 0
         with torch.no_grad():
-            for i, (src, trg) in enumerate(tqdm(data_loader.val_loader, total=data_loader.val_record_count / BATCH_SIZE)):
+            for i, (src, trg) in enumerate(
+                tqdm(
+                    data_loader.val_loader,
+                    total=data_loader.val_record_count / BATCH_SIZE,
+                )
+            ):
                 src = src.to(device)
                 trg = trg.to(device)
                 output, _ = model(src, trg[:, :-1])

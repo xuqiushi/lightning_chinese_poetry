@@ -19,6 +19,7 @@ pydantic = "*"
 tqdm = "*"
 sentencepiece = "*"
 torchdata = "*"
+torch-tb-profiler = "*"
 
 [requires]
 python_version = "3.8"
