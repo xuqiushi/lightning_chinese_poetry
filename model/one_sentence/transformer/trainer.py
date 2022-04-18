@@ -185,23 +185,23 @@ class Trainer:
                     # optimizer.zero_grad()
                     for param in model.parameters():
                         param.grad = None
-                    # with autocast(device.type):
-                    src = src.to(device, non_blocking=True).long()
-                    trg = trg.to(device, non_blocking=True).long()
+                    with autocast(device.type):
+                        src = src.to(device, non_blocking=True).long()
+                        trg = trg.to(device, non_blocking=True).long()
 
-                    output, _ = model(src, trg[:, :-1])
+                        output, _ = model(src, trg[:, :-1])
 
                     output_dim = output.shape[-1]
                     output = output.contiguous().view(-1, output_dim)
                     trg = trg[:, 1:].contiguous().view(-1)
                     loss = criterion(output, trg)
                     loss.backward()
-                    # scaler.scale(loss).backward()
-                    # scaler.unscale_(optimizer)
+                    scaler.scale(loss).backward()
+                    scaler.unscale_(optimizer)
                     torch.nn.utils.clip_grad_norm_(model.parameters(), CLIP)
-                    optimizer.step()
-                    # scaler.step(optimizer)
-                    # scaler.update()
+                    # optimizer.step()
+                    scaler.step(optimizer)
+                    scaler.update()
                     epoch_loss += loss
 
             print(prof.key_averages().table(sort_by="cpu_time_total", row_limit=10))
