@@ -7,6 +7,7 @@ from lightning_fast.tools.path_tools.directory_changer import DirectoryChanger
 from torch import nn, autocast
 from torch.cuda.amp import GradScaler
 from torch.nn.modules.loss import CrossEntropyLoss
+import torch.autograd.profiler as profiler
 from tqdm import tqdm
 
 from config import config
@@ -161,7 +162,10 @@ class Trainer:
             # with autocast(device.type):
             src = src.to(device, non_blocking=True).long()
             trg = trg.to(device, non_blocking=True).long()
-            output, _ = model(src, trg[:, :-1])
+            with profiler.profile(record_shapes=True, use_cuda=torch.cuda.is_available()) as prof:
+                with profiler.record_function("model_inference"):
+                    output, _ = model(src, trg[:, :-1])
+                print(prof.key_averages().table(sort_by="cpu_time_total", row_limit=10))
             output_dim = output.shape[-1]
             output = output.contiguous().view(-1, output_dim)
             trg = trg[:, 1:].contiguous().view(-1)
