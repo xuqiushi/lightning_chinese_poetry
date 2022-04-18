@@ -108,9 +108,9 @@ class Trainer:
             self.device,
             STR_MAX_LENGTH
         )
-        self.model = Seq2Seq(
+        self.model = torch.jit.script(Seq2Seq(
             enc, dec, self.src_pad_idx, self.trg_pad_idx, self.device
-        ).to(self.device)
+        ).to(self.device))
         self.count_parameters(self.model)
         self.model.apply(self.initialize_weights)
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=LEARNING_RATE)
@@ -158,20 +158,21 @@ class Trainer:
             # optimizer.zero_grad()
             for param in model.parameters():
                 param.grad = None
-            with autocast(device.type):
-                src = src.to(device, non_blocking=True).long()
-                trg = trg.to(device, non_blocking=True).long()
-                output, _ = model(src, trg[:, :-1])
-                output_dim = output.shape[-1]
-                output = output.contiguous().view(-1, output_dim)
-                trg = trg[:, 1:].contiguous().view(-1)
-                loss = criterion(output, trg)
-            scaler.scale(loss).backward()
-            scaler.unscale_(optimizer)
+            # with autocast(device.type):
+            src = src.to(device, non_blocking=True).long()
+            trg = trg.to(device, non_blocking=True).long()
+            output, _ = model(src, trg[:, :-1])
+            output_dim = output.shape[-1]
+            output = output.contiguous().view(-1, output_dim)
+            trg = trg[:, 1:].contiguous().view(-1)
+            loss = criterion(output, trg)
+            loss.backward()
+            # scaler.scale(loss).backward()
+            # scaler.unscale_(optimizer)
             torch.nn.utils.clip_grad_norm_(model.parameters(), CLIP)
-            # optimizer.step()
-            scaler.step(optimizer)
-            scaler.update()
+            optimizer.step()
+            # scaler.step(optimizer)
+            # scaler.update()
             epoch_loss += loss.detach()
 
         epoch_loss = epoch_loss.item()
