@@ -30,7 +30,7 @@ ENC_DROPOUT = 0.1
 DEC_DROPOUT = 0.1
 LEARNING_RATE = 0.0005
 CLIP = 1
-BATCH_SIZE = 256
+BATCH_SIZE = 350
 EPOCHS = 10
 
 
@@ -113,7 +113,7 @@ class Trainer:
         ).to(self.device))
         self.count_parameters(self.model)
         self.model.apply(self.initialize_weights)
-        self.optimizer = torch.optim.AdamW(self.model.parameters(), lr=LEARNING_RATE)
+        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=LEARNING_RATE)
         self.criterion = nn.CrossEntropyLoss(ignore_index=self.trg_pad_idx)
         self.scaler = GradScaler()
 
