@@ -7,6 +7,7 @@ from lightning_fast.tools.path_tools.directory_changer import DirectoryChanger
 from torch import nn, autocast
 from torch.cuda.amp import GradScaler
 from torch.nn.modules.loss import CrossEntropyLoss
+
 # from torch.profiler import profile, record_function, ProfilerActivity
 from tqdm import tqdm
 
@@ -182,14 +183,16 @@ class Trainer:
             #     on_trace_ready=torch.profiler.tensorboard_trace_handler(str(LOG_DIR))
             # ) as prof:
             #     with record_function("model_inference"):
-                    # optimizer.zero_grad()
+            # optimizer.zero_grad()
             src = src.to(device, non_blocking=True).long()
             trg = trg.to(device, non_blocking=True).long()
             for param in model.parameters():
                 param.grad = None
             with autocast(device.type):
                 # output, _ = model(src, trg[:, :-1])
-                output, _ = torch.jit.trace(model, src, trg[:, :-1])
+                output, _ = torch.jit.trace_module(
+                    model, {"forward": (src, trg[:, :-1])}
+                )
 
                 output_dim = output.shape[-1]
                 output = output.contiguous().view(-1, output_dim)
