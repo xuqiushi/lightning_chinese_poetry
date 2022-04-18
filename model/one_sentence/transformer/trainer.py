@@ -21,19 +21,20 @@ from model.one_sentence.transformer.net.seq2seq import Seq2Seq
 
 LOG_DIR = config.directories.log_dir / "one_sentence_transformer"
 STR_MAX_LENGTH = 100
-HID_DIM = 256
-ENC_LAYERS = 3
-DEC_LAYERS = 3
+HID_DIM = 512
+ENC_LAYERS = 8
+DEC_LAYERS = 8
 ENC_HEADS = 8
 DEC_HEADS = 8
 ENC_PF_DIM = 512
 DEC_PF_DIM = 512
 ENC_DROPOUT = 0.1
 DEC_DROPOUT = 0.1
-LEARNING_RATE = 0.0005
+# LEARNING_RATE = 0.0005
+LEARNING_RATE = 0.1
 CLIP = 1
 BATCH_SIZE = 512
-EPOCHS = 20
+EPOCHS = 10
 
 
 class Trainer:
@@ -60,6 +61,7 @@ class Trainer:
 
         self.model = None
         self.optimizer = None
+        self.lr_scheduler = None
         self.criterion = None
         self.scaler = None
 
@@ -119,6 +121,7 @@ class Trainer:
         self.count_parameters(self.model)
         self.model.apply(self.initialize_weights)
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=LEARNING_RATE)
+        self.lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(self.optimizer, gamma=0.1)
         self.criterion = nn.CrossEntropyLoss(ignore_index=self.trg_pad_idx)
         self.scaler = GradScaler()
 
