@@ -180,36 +180,39 @@ class Trainer:
                 total=data_loader.train_record_count / BATCH_SIZE,
             )
         ):
-            # optimizer.zero_grad()
-            for param in model.parameters():
-                param.grad = None
-            # with autocast(device.type):
-            src = src.to(device, non_blocking=True).long()
-            trg = trg.to(device, non_blocking=True).long()
             with profile(
                 activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
                 profile_memory=True,
                 record_shapes=True,
             ) as prof:
                 with record_function("model_inference"):
+                    # optimizer.zero_grad()
+                    for param in model.parameters():
+                        param.grad = None
+                    # with autocast(device.type):
+                    src = src.to(device, non_blocking=True).long()
+                    trg = trg.to(device, non_blocking=True).long()
+
                     output, _ = model(src, trg[:, :-1])
-            # print(
-            #     prof.key_averages(group_by_input_shape=True).table(
-            #         sort_by="cpu_time_total", row_limit=10
-            #     )
-            # )
-            output_dim = output.shape[-1]
-            output = output.contiguous().view(-1, output_dim)
-            trg = trg[:, 1:].contiguous().view(-1)
-            loss = criterion(output, trg)
-            loss.backward()
-            # scaler.scale(loss).backward()
-            # scaler.unscale_(optimizer)
-            torch.nn.utils.clip_grad_norm_(model.parameters(), CLIP)
-            optimizer.step()
-            # scaler.step(optimizer)
-            # scaler.update()
-            epoch_loss += loss
+
+                    output_dim = output.shape[-1]
+                    output = output.contiguous().view(-1, output_dim)
+                    trg = trg[:, 1:].contiguous().view(-1)
+                    loss = criterion(output, trg)
+                    loss.backward()
+                    # scaler.scale(loss).backward()
+                    # scaler.unscale_(optimizer)
+                    torch.nn.utils.clip_grad_norm_(model.parameters(), CLIP)
+                    optimizer.step()
+                    # scaler.step(optimizer)
+                    # scaler.update()
+                    epoch_loss += loss
+
+            print(
+                prof.key_averages(group_by_input_shape=True).table(
+                    sort_by="cpu_time_total", row_limit=10
+                )
+            )
 
         epoch_loss = epoch_loss.item()
         return epoch_loss / data_loader.train_record_count * BATCH_SIZE
