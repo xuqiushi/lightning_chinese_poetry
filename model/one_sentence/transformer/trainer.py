@@ -22,8 +22,8 @@ from model.one_sentence.transformer.net.seq2seq import Seq2Seq
 LOG_DIR = config.directories.log_dir / "one_sentence_transformer"
 STR_MAX_LENGTH = 100
 HID_DIM = 512
-ENC_LAYERS = 8
-DEC_LAYERS = 8
+ENC_LAYERS = 4
+DEC_LAYERS = 4
 ENC_HEADS = 8
 DEC_HEADS = 8
 ENC_PF_DIM = 512
@@ -33,7 +33,7 @@ DEC_DROPOUT = 0.1
 # LEARNING_RATE = 0.0005
 LEARNING_RATE = 0.1
 CLIP = 1
-BATCH_SIZE = 512
+BATCH_SIZE = 384
 EPOCHS = 10
 
 
