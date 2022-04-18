@@ -189,15 +189,15 @@ class Trainer:
             for param in model.parameters():
                 param.grad = None
             with autocast(device.type):
-                output, _ = torch.jit.trace(model, (src, trg[:, :-1]))
+                output, _ = model(src, trg[:, :-1])
 
-                output_dim = output.shape[-1]
-                output = output.contiguous().view(-1, output_dim)
-                trg = trg[:, 1:].contiguous().view(-1)
-                loss = criterion(output, trg)
+            output_dim = output.shape[-1]
+            output = output.contiguous().view(-1, output_dim)
+            trg = trg[:, 1:].contiguous().view(-1)
+            loss = criterion(output, trg)
             # loss.backward()
             scaler.scale(loss).backward()
-            # scaler.unscale_(optimizer)
+            scaler.unscale_(optimizer)
             torch.nn.utils.clip_grad_norm_(model.parameters(), CLIP)
             # optimizer.step()
             scaler.step(optimizer)
