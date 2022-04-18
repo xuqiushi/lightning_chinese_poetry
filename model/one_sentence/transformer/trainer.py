@@ -115,11 +115,9 @@ class Trainer:
             self.device,
             STR_MAX_LENGTH,
         )
-        self.model = torch.jit.script(
-            Seq2Seq(enc, dec, self.src_pad_idx, self.trg_pad_idx, self.device).to(
-                self.device
-            )
-        )
+        self.model = Seq2Seq(
+            enc, dec, self.src_pad_idx, self.trg_pad_idx, self.device
+        ).to(self.device)
         self.count_parameters(self.model)
         self.model.apply(self.initialize_weights)
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=LEARNING_RATE)
@@ -207,11 +205,7 @@ class Trainer:
                     # scaler.update()
                     epoch_loss += loss
 
-            print(
-                prof.key_averages().table(
-                    sort_by="cpu_time_total", row_limit=10
-                )
-            )
+            print(prof.key_averages().table(sort_by="cpu_time_total", row_limit=10))
 
         epoch_loss = epoch_loss.item()
         return epoch_loss / data_loader.train_record_count * BATCH_SIZE
