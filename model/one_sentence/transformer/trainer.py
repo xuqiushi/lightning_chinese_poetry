@@ -182,7 +182,6 @@ class Trainer:
         ):
             with profile(
                 activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
-                profile_memory=True,
                 record_shapes=True,
             ) as prof:
                 with record_function("model_inference"):
@@ -209,7 +208,7 @@ class Trainer:
                     epoch_loss += loss
 
             print(
-                prof.key_averages(group_by_input_shape=True).table(
+                prof.key_averages().table(
                     sort_by="cpu_time_total", row_limit=10
                 )
             )
