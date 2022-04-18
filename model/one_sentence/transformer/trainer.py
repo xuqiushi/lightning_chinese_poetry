@@ -125,7 +125,7 @@ class Trainer:
 
             start_time = time.time()
 
-            train_loss = self.train(self.model, self.data_loader, self.optimizer, self.criterion, self.device)
+            train_loss = self.train(self.model, self.data_loader, self.optimizer, self.criterion, self.device, self.scaler)
             valid_loss = self.evaluate(self.model, self.data_loader, self.criterion, self.device)
 
             end_time = time.time()
