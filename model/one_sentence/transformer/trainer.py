@@ -137,6 +137,7 @@ class Trainer:
                 self.model,
                 self.data_loader,
                 self.optimizer,
+                self.lr_scheduler,
                 self.criterion,
                 self.device,
                 self.scaler,
@@ -167,6 +168,7 @@ class Trainer:
         model: Seq2Seq,
         data_loader: OneSentenceLoader,
         optimizer: torch.optim.Adam,
+        lr_scheduler: torch.optim.lr_scheduler.ExponentialLR,
         criterion: CrossEntropyLoss,
         device: torch.device,
         scaler: GradScaler,
@@ -204,6 +206,7 @@ class Trainer:
             # optimizer.step()
             scaler.step(optimizer)
             scaler.update()
+            lr_scheduler.step()
             epoch_loss += loss
 
             # print(prof.key_averages().table(sort_by="cpu_time_total", row_limit=10))
