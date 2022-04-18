@@ -125,7 +125,7 @@ class Trainer:
     def process(self):
         torch.multiprocessing.set_start_method("spawn")
         self.init_model()
-        model = torch.jit.script(self.model)
+        model = torch.jit.script(self.model).to(self.device)
         best_valid_loss = float("inf")
         for epoch in range(EPOCHS):
 
