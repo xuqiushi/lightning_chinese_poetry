@@ -173,7 +173,7 @@ class Trainer:
             optimizer.step()
             # scaler.step(optimizer)
             # scaler.update()
-            epoch_loss += loss.detach()
+            epoch_loss += loss
 
         epoch_loss = epoch_loss.item()
         return epoch_loss / data_loader.train_record_count * BATCH_SIZE
