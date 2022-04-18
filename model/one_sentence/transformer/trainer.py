@@ -32,7 +32,7 @@ ENC_DROPOUT = 0.1
 DEC_DROPOUT = 0.1
 LEARNING_RATE = 0.0005
 CLIP = 1
-BATCH_SIZE = 1024
+BATCH_SIZE = 512
 EPOCHS = 10
 
 
@@ -48,10 +48,10 @@ class Trainer:
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.data_loader = OneSentenceLoader(
             directory=self.data_directory,
-            train_n_workers=8,
+            train_n_workers=4,
             train_batch_size=BATCH_SIZE,
             train_pre_fetch_factor=8,
-            val_n_workers=8,
+            val_n_workers=4,
             val_batch_size=BATCH_SIZE,
             val_pre_fetch_factor=8,
             device=self.device,
