@@ -125,14 +125,13 @@ class Trainer:
     def process(self):
         torch.multiprocessing.set_start_method("spawn")
         self.init_model()
-        model = torch.jit.script(self.model).to(self.device)
         best_valid_loss = float("inf")
         for epoch in range(EPOCHS):
 
             start_time = time.time()
 
             train_loss = self.train(
-                model,
+                self.model,
                 self.data_loader,
                 self.optimizer,
                 self.criterion,
@@ -140,7 +139,7 @@ class Trainer:
                 self.scaler,
             )
             valid_loss = self.evaluate(
-                model, self.data_loader, self.criterion, self.device
+                self.model, self.data_loader, self.criterion, self.device
             )
 
             end_time = time.time()
@@ -149,7 +148,7 @@ class Trainer:
 
             if valid_loss < best_valid_loss:
                 best_valid_loss = valid_loss
-                torch.save(model.state_dict(), str(self.model_path))
+                torch.save(self.model.state_dict(), str(self.model_path))
 
             print(f"Epoch: {epoch + 1:02} | Time: {epoch_mins}m {epoch_secs}s")
             print(
@@ -189,7 +188,8 @@ class Trainer:
             for param in model.parameters():
                 param.grad = None
             with autocast(device.type):
-                output, _ = model(src, trg[:, :-1])
+                # output, _ = model(src, trg[:, :-1])
+                output, _ = torch.jit.trace(model, src, trg[:, :-1])
 
                 output_dim = output.shape[-1]
                 output = output.contiguous().view(-1, output_dim)
