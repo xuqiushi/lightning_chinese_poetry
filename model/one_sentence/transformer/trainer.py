@@ -4,7 +4,8 @@ import time
 
 import torch
 from lightning_fast.tools.path_tools.directory_changer import DirectoryChanger
-from torch import nn
+from torch import nn, autocast
+from torch.cuda.amp import GradScaler
 from torch.nn.modules.loss import CrossEntropyLoss
 from tqdm import tqdm
 
@@ -58,6 +59,7 @@ class Trainer:
         self.model = None
         self.optimizer = None
         self.criterion = None
+        self.scaler = None
 
     @classmethod
     def count_parameters(cls, model):
@@ -113,6 +115,7 @@ class Trainer:
         self.model.apply(self.initialize_weights)
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=LEARNING_RATE)
         self.criterion = nn.CrossEntropyLoss(ignore_index=self.trg_pad_idx)
+        self.scaler = GradScaler()
 
     def process(self):
         torch.multiprocessing.set_start_method("spawn")
@@ -144,7 +147,8 @@ class Trainer:
         data_loader: OneSentenceLoader,
         optimizer: torch.optim.Adam,
         criterion: CrossEntropyLoss,
-        device: torch.device
+        device: torch.device,
+        scaler: GradScaler
     ):
         model.train()
         epoch_loss = torch.tensor([0.0], device=device)
@@ -156,14 +160,18 @@ class Trainer:
             # optimizer.zero_grad()
             for param in model.parameters():
                 param.grad = None
-            output, _ = model(src, trg[:, :-1])
-            output_dim = output.shape[-1]
-            output = output.contiguous().view(-1, output_dim)
-            trg = trg[:, 1:].contiguous().view(-1)
-            loss = criterion(output, trg)
-            loss.backward()
+            with autocast(device.type):
+                output, _ = model(src, trg[:, :-1])
+                output_dim = output.shape[-1]
+                output = output.contiguous().view(-1, output_dim)
+                trg = trg[:, 1:].contiguous().view(-1)
+                loss = criterion(output, trg)
+            scaler.scale(loss).backward()
+            scaler.unscale_(optimizer)
             torch.nn.utils.clip_grad_norm_(model.parameters(), CLIP)
-            optimizer.step()
+            # optimizer.step()
+            scaler.step(optimizer)
+            scaler.update()
             epoch_loss += loss.detach()
 
         epoch_loss = epoch_loss.item()
