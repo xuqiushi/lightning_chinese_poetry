@@ -189,7 +189,7 @@ class Trainer:
             for param in model.parameters():
                 param.grad = None
             with autocast(device.type):
-                output, _ = torch.jit.trace(model, src, trg[:, :-1])
+                output, _ = torch.jit.trace(model, (src, trg[:, :-1]))
 
                 output_dim = output.shape[-1]
                 output = output.contiguous().view(-1, output_dim)
