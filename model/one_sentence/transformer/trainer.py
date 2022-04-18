@@ -7,7 +7,7 @@ from lightning_fast.tools.path_tools.directory_changer import DirectoryChanger
 from torch import nn, autocast
 from torch.cuda.amp import GradScaler
 from torch.nn.modules.loss import CrossEntropyLoss
-from torch.profiler import profile, record_function, ProfilerActivity
+# from torch.profiler import profile, record_function, ProfilerActivity
 from tqdm import tqdm
 
 from config import config
@@ -176,35 +176,35 @@ class Trainer:
                 total=data_loader.train_record_count / BATCH_SIZE,
             )
         ):
-            with profile(
-                activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
-                record_shapes=True,
-                on_trace_ready=torch.profiler.tensorboard_trace_handler(str(LOG_DIR))
-            ) as prof:
-                with record_function("model_inference"):
+            # with profile(
+            #     activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
+            #     record_shapes=True,
+            #     on_trace_ready=torch.profiler.tensorboard_trace_handler(str(LOG_DIR))
+            # ) as prof:
+            #     with record_function("model_inference"):
                     # optimizer.zero_grad()
-                    for param in model.parameters():
-                        param.grad = None
-                    with autocast(device.type):
-                        src = src.to(device, non_blocking=True).long()
-                        trg = trg.to(device, non_blocking=True).long()
+            for param in model.parameters():
+                param.grad = None
+            with autocast(device.type):
+                src = src.to(device, non_blocking=True).long()
+                trg = trg.to(device, non_blocking=True).long()
 
-                        output, _ = model(src, trg[:, :-1])
+                output, _ = model(src, trg[:, :-1])
 
-                    output_dim = output.shape[-1]
-                    output = output.contiguous().view(-1, output_dim)
-                    trg = trg[:, 1:].contiguous().view(-1)
-                    loss = criterion(output, trg)
-                    # loss.backward()
-                    scaler.scale(loss).backward()
-                    scaler.unscale_(optimizer)
-                    torch.nn.utils.clip_grad_norm_(model.parameters(), CLIP)
-                    # optimizer.step()
-                    scaler.step(optimizer)
-                    scaler.update()
-                    epoch_loss += loss
+            output_dim = output.shape[-1]
+            output = output.contiguous().view(-1, output_dim)
+            trg = trg[:, 1:].contiguous().view(-1)
+            loss = criterion(output, trg)
+            # loss.backward()
+            scaler.scale(loss).backward()
+            scaler.unscale_(optimizer)
+            torch.nn.utils.clip_grad_norm_(model.parameters(), CLIP)
+            # optimizer.step()
+            scaler.step(optimizer)
+            scaler.update()
+            epoch_loss += loss
 
-            print(prof.key_averages().table(sort_by="cpu_time_total", row_limit=10))
+            # print(prof.key_averages().table(sort_by="cpu_time_total", row_limit=10))
 
         epoch_loss = epoch_loss.item()
         return epoch_loss / data_loader.train_record_count * BATCH_SIZE
@@ -238,9 +238,9 @@ class Trainer:
 
 
 if __name__ == "__main__":
-    # torch.autograd.set_detect_anomaly(False)
-    # torch.autograd.profiler.profile(False)
-    # torch.autograd.profiler.emit_nvtx(False)
+    torch.autograd.set_detect_anomaly(False)
+    torch.autograd.profiler.profile(False)
+    torch.autograd.profiler.emit_nvtx(False)
     # torch.backends.cudnn.benchmark = True
     trainer = Trainer(TANG_SONG_SHI_DIRECTORY)
     trainer.process()
