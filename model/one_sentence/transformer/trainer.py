@@ -20,8 +20,6 @@ from model.one_sentence.transformer.net.encoder import Encoder
 from model.one_sentence.transformer.net.seq2seq import Seq2Seq
 
 LOG_DIR = config.directories.log_dir / "one_sentence_transformer"
-LOG_DIR.mkdir(exist_ok=True, parents=True)
-torch.profiler.tensorboard_trace_handler(str(LOG_DIR))
 STR_MAX_LENGTH = 100
 HID_DIM = 256
 ENC_LAYERS = 3
@@ -181,6 +179,7 @@ class Trainer:
             with profile(
                 activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
                 record_shapes=True,
+                on_trace_ready=torch.profiler.tensorboard_trace_handler(str(LOG_DIR))
             ) as prof:
                 with record_function("model_inference"):
                     # optimizer.zero_grad()
