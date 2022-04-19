@@ -32,7 +32,7 @@ DEC_PF_DIM = 512
 ENC_DROPOUT = 0.1
 DEC_DROPOUT = 0.1
 # LEARNING_RATE = 0.0005
-LEARNING_RATE = 0.01
+LEARNING_RATE = 0.1
 CLIP = 1
 BATCH_SIZE = 384
 EPOCHS = 10
@@ -183,6 +183,7 @@ class Trainer:
     ):
         model.train()
         epoch_loss = torch.tensor([0.0], device=device)
+        scale = scaler.get_scale()
         for i, (src, trg) in enumerate(
             tqdm(
                 data_loader.train_loader,
@@ -200,8 +201,8 @@ class Trainer:
             trg = trg.to(device, non_blocking=True).long()
             for param in model.parameters():
                 param.grad = None
-            with autocast(device.type):
-                output, _ = model(src, trg[:, :-1])
+            # with autocast(device.type):
+            output, _ = model(src, trg[:, :-1])
 
             output_dim = output.shape[-1]
             output = output.contiguous().view(-1, output_dim)
@@ -211,17 +212,17 @@ class Trainer:
             scaler.scale(loss).backward()
             scaler.unscale_(optimizer)
             torch.nn.utils.clip_grad_norm_(model.parameters(), CLIP)
-            scale = scaler.get_scale()
             # optimizer.step()
             scaler.step(optimizer)
             scaler.update()
-            skip_lr_sch = scale != scaler.get_scale()
-            if not skip_lr_sch:
-                lr_scheduler.step()
+
             epoch_loss += loss
 
             # print(prof.key_averages().table(sort_by="cpu_time_total", row_limit=10))
 
+        skip_lr_sch = scale > scaler.get_scale()
+        if not skip_lr_sch:
+            lr_scheduler.step()
         epoch_loss = epoch_loss.item()
         return epoch_loss / data_loader.train_record_count * BATCH_SIZE
 
