@@ -201,9 +201,8 @@ class Trainer:
             trg = trg.to(device, non_blocking=True).long()
             for param in model.parameters():
                 param.grad = None
-            # with autocast(device.type):
-            output, _ = model(src, trg[:, :-1])
-
+            with autocast(device.type):
+                output, _ = model(src, trg[:, :-1])
             output_dim = output.shape[-1]
             output = output.contiguous().view(-1, output_dim)
             trg = trg[:, 1:].contiguous().view(-1)
