@@ -155,6 +155,7 @@ class Trainer:
                 torch.save(self.model.state_dict(), str(self.model_path))
 
             print(f"Epoch: {epoch + 1:02} | Time: {epoch_mins}m {epoch_secs}s")
+            print(self.optimizer.param_groups[0]["lr"])
             print(
                 f"\tTrain Loss: {train_loss:.3f} | Train PPL: {math.exp(train_loss):7.3f}"
             )
