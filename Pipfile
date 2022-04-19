@@ -21,6 +21,7 @@ sentencepiece = "*"
 torchdata = "*"
 torch-tb-profiler = "*"
 vaex = "*"
+vaex-core = "*"
 
 [requires]
 python_version = "3.8"
