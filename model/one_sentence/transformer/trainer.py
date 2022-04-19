@@ -35,7 +35,7 @@ DEC_DROPOUT = 0.1
 LEARNING_RATE = 0.0005
 CLIP = 1
 BATCH_SIZE = 384
-EPOCHS = 10
+EPOCHS = 20
 
 
 class Trainer:
@@ -123,7 +123,7 @@ class Trainer:
         self.model.apply(self.initialize_weights)
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=LEARNING_RATE)
         self.lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(
-            self.optimizer, gamma=0.5
+            self.optimizer, gamma=0.8
         )
         self.criterion = nn.CrossEntropyLoss(ignore_index=self.trg_pad_idx)
         self.scaler = GradScaler()
