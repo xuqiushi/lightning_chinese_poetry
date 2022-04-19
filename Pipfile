@@ -20,6 +20,7 @@ tqdm = "*"
 sentencepiece = "*"
 torchdata = "*"
 torch-tb-profiler = "*"
+vaex = "*"
 
 [requires]
 python_version = "3.8"
