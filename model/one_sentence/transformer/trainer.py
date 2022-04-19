@@ -23,10 +23,10 @@ from model.one_sentence.transformer.net.seq2seq import Seq2Seq
 LOG_DIR = config.directories.log_dir / "one_sentence_transformer"
 STR_MAX_LENGTH = 100
 HID_DIM = 256
-ENC_LAYERS = 4
-DEC_LAYERS = 4
-ENC_HEADS = 3
-DEC_HEADS = 3
+ENC_LAYERS = 3
+DEC_LAYERS = 3
+ENC_HEADS = 8
+DEC_HEADS = 8
 ENC_PF_DIM = 512
 DEC_PF_DIM = 512
 ENC_DROPOUT = 0.1
