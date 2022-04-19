@@ -12,8 +12,8 @@ from torch.nn.modules.loss import CrossEntropyLoss
 from tqdm import tqdm
 
 from config import config
-from etl.etl_contants import TANG_SONG_SHI_DIRECTORY
-from etl.one_sentence.components.vocab_loader import VocabLoader, PADDING
+from etl.etl_contants import TANG_SONG_SHI_DIRECTORY, PADDING
+from etl.one_sentence.components.vocab_loader import VocabLoader
 from etl.one_sentence.custom_iterable_dataset import CustomIterableDataset
 from etl.one_sentence.one_sentence_loader import OneSentenceLoader
 from model.one_sentence.transformer.net.decoder import Decoder

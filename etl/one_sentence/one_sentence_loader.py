@@ -9,7 +9,8 @@ from torchdata.datapipes.iter import IterableWrapper
 from etl.entity.dataset_type import DatasetType
 from etl.one_sentence.components.character_tokenizer import CharacterTokenizer
 from etl.one_sentence.components.data_info_loader import DataInfoLoader
-from etl.one_sentence.components.vocab_loader import BOS, EOS, VocabLoader, PADDING
+from etl.one_sentence.components.vocab_loader import VocabLoader
+from etl.etl_contants import BOS, PADDING, EOS
 from etl.one_sentence.custom_iterable_dataset import CustomIterableDataset
 
 

@@ -11,11 +11,10 @@ from torch.utils.data import IterableDataset
 
 from etl.entity.dataset_type import DatasetType
 from etl.entity.poetry import Poetry
-from etl.etl_contants import TANG_SONG_SHI_DIRECTORY
+from etl.etl_contants import TANG_SONG_SHI_DIRECTORY, CH_SEP
 
 
 class CustomIterableDataset(IterableDataset):
-    CH_SEP = ",，.。!！?？"
     LOGGER = logging.getLogger("OneSentenceDataset")
 
     def __init__(
@@ -75,21 +74,19 @@ class CustomIterableDataset(IterableDataset):
                             continue
                     poetry = Poetry.parse_obj(item)
                     for paragraph in poetry.paragraphs:
-                        re.fullmatch(
-                            rf"^[^{self.CH_SEP}]+[{self.CH_SEP}][^{self.CH_SEP}]+[{self.CH_SEP}]$",
+                        sentences = re.findall(
+                            rf"[^{CH_SEP}]+[{CH_SEP}]",
                             paragraph,
                         )
-                        sentences = re.search(
-                            rf"^([^{self.CH_SEP}]+[{self.CH_SEP}])([^{self.CH_SEP}]+[{self.CH_SEP}])$",
-                            paragraph,
-                        )
-                        if sentences:
-                            sentences_groups = sentences.groups()
-                            yield sentences_groups
-                        else:
+                        if len(sentences) < 2:
                             self.LOGGER.info(
                                 f"current paragraph not combine by two sentence: {paragraph}"
                             )
+                        else:
+                            for split_index in range(1, len(sentences)):
+                                src = "".join(sentences[:split_index])
+                                trg = "".join(sentences[split_index:])
+                                yield src, trg
 
 
 if __name__ == "__main__":

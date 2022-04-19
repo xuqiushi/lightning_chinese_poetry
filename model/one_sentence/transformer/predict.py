@@ -2,8 +2,8 @@ import pathlib
 
 import torch
 
-from etl.etl_contants import TANG_SONG_SHI_DIRECTORY
-from etl.one_sentence.components.vocab_loader import BOS, EOS, VocabLoader, PADDING
+from etl.etl_contants import TANG_SONG_SHI_DIRECTORY, BOS, PADDING, EOS
+from etl.one_sentence.components.vocab_loader import VocabLoader
 from etl.one_sentence.custom_iterable_dataset import CustomIterableDataset
 from etl.one_sentence.one_sentence_loader import OneSentenceLoader
 from model.one_sentence.lstm.net import Net

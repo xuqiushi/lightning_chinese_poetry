@@ -10,7 +10,12 @@ TANG_SONG_SHI_DIRECTORY = DirectoryChanger.get_new_root_directory(
     config.directories.base_dir,
     config.directories.data_dir,
 )
+CH_SEP = ",，.。!！?？"
 PADDING_IDX = 1
 BOS_IDX = 0
 EOS_IDX = 2
 MAX_SEQ_LEN = 256
+UNKNOWN = "<unk>"
+BOS = "<bos>"
+PADDING = "<padding>"
+EOS = "<eos>"
