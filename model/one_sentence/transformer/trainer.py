@@ -123,7 +123,7 @@ class Trainer:
         self.model.apply(self.initialize_weights)
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=LEARNING_RATE)
         self.lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(
-            self.optimizer, gamma=0.1
+            self.optimizer, gamma=0.5
         )
         self.criterion = nn.CrossEntropyLoss(ignore_index=self.trg_pad_idx)
         self.scaler = GradScaler()
@@ -160,7 +160,7 @@ class Trainer:
             print(
                 f"Epoch: {epoch + 1:02} | "
                 f"Time: {epoch_mins}m {epoch_secs}s | "
-                f"LR: {self.optimizer.param_groups[0]['lr']:6f}"
+                f"Next LR: {self.optimizer.param_groups[0]['lr']:6f}"
             )
             print()
             print(
