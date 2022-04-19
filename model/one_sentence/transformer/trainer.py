@@ -7,6 +7,7 @@ from lightning_fast.tools.path_tools.directory_changer import DirectoryChanger
 from torch import nn, autocast
 from torch.cuda.amp import GradScaler
 from torch.nn.modules.loss import CrossEntropyLoss
+
 # from torch.profiler import profile, record_function, ProfilerActivity
 from tqdm import tqdm
 
@@ -121,7 +122,9 @@ class Trainer:
         self.count_parameters(self.model)
         self.model.apply(self.initialize_weights)
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=LEARNING_RATE)
-        self.lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(self.optimizer, gamma=0.1)
+        self.lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(
+            self.optimizer, gamma=0.1
+        )
         self.criterion = nn.CrossEntropyLoss(ignore_index=self.trg_pad_idx)
         self.scaler = GradScaler()
 
@@ -154,8 +157,12 @@ class Trainer:
                 best_valid_loss = valid_loss
                 torch.save(self.model.state_dict(), str(self.model_path))
 
-            print(f"Epoch: {epoch + 1:02} | Time: {epoch_mins}m {epoch_secs}s")
-            print(self.optimizer.param_groups[0]["lr"])
+            print(
+                f"Epoch: {epoch + 1:02} | "
+                f"Time: {epoch_mins}m {epoch_secs}s | "
+                f"LR: {self.optimizer.param_groups[0]['lr']:6f}"
+            )
+            print()
             print(
                 f"\tTrain Loss: {train_loss:.3f} | Train PPL: {math.exp(train_loss):7.3f}"
             )
@@ -188,7 +195,7 @@ class Trainer:
             #     on_trace_ready=torch.profiler.tensorboard_trace_handler(str(LOG_DIR))
             # ) as prof:
             #     with record_function("model_inference"):
-                    # optimizer.zero_grad()
+            # optimizer.zero_grad()
             src = src.to(device, non_blocking=True).long()
             trg = trg.to(device, non_blocking=True).long()
             for param in model.parameters():
@@ -204,10 +211,13 @@ class Trainer:
             scaler.scale(loss).backward()
             scaler.unscale_(optimizer)
             torch.nn.utils.clip_grad_norm_(model.parameters(), CLIP)
+            scale = scaler.get_scale()
             # optimizer.step()
             scaler.step(optimizer)
             scaler.update()
-            lr_scheduler.step()
+            skip_lr_sch = scale != scaler.get_scale()
+            if not skip_lr_sch:
+                lr_scheduler.step()
             epoch_loss += loss
 
             # print(prof.key_averages().table(sort_by="cpu_time_total", row_limit=10))
