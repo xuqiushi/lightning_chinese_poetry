@@ -7,8 +7,8 @@ from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import DataLoader
 from torchdata.datapipes.map import SequenceWrapper
 
+from etl.dataset.arrow_dataset import ArrowDataset
 from etl.etl_contants import PADDING
-from etl.one_sentence_arrow.one_sentence_arrow_dataset import OneSentenceArrowDataset
 from etl.one_sentence_arrow.raw_data_transformer import RawDataTransformer
 
 
@@ -34,9 +34,9 @@ class OneSentenceArrowLoader:
             torch_transform.ToTensor(PADDING),
         )
         train_df, val_df = self.raw_data_transformer.get_train_test()
-        self.train_dataset = OneSentenceArrowDataset(train_df)
+        self.train_dataset = ArrowDataset(train_df)
         self.train_dataset = SequenceWrapper(self.train_dataset).map(self.transform)
-        self.val_dataset = OneSentenceArrowDataset(val_df)
+        self.val_dataset = ArrowDataset(val_df)
         self.val_dataset = SequenceWrapper(self.val_dataset).map(self.transform)
         self.train_loader = DataLoader(
             self.train_dataset,
@@ -59,7 +59,8 @@ class OneSentenceArrowLoader:
     def transform(self, iter_item: Tuple[str, str]):
         return self.t_sequential(iter_item[0]), self.t_sequential(iter_item[1])
 
-    def pad_collate(self, batch):
+    @classmethod
+    def pad_collate(cls, batch):
         (xx, yy) = zip(*batch)
         # x_lens = [len(x) for x in xx]
         # y_lens = [len(y) for y in yy]

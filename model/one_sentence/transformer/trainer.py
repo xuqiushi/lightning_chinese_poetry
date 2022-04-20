@@ -12,6 +12,8 @@ from torch.nn.modules.loss import CrossEntropyLoss
 from tqdm import tqdm
 
 from config import config
+from etl.dataset.seq2seq_data_loader import Seq2seqDataLoader
+from etl.entity.data_loader_parameter import DataLoaderParameter
 from etl.etl_contants import TANG_SONG_SHI_DIRECTORY, PADDING
 from etl.one_sentence_arrow.one_sentence_arrow_loader import OneSentenceArrowLoader
 from etl.one_sentence_arrow.raw_data_transformer import RawDataTransformer
@@ -30,35 +32,45 @@ ENC_PF_DIM = 512
 DEC_PF_DIM = 512
 ENC_DROPOUT = 0.1
 DEC_DROPOUT = 0.1
+TEST_SIZE = 0.2
 # LEARNING_RATE = 0.0005
 LEARNING_RATE = 0.0005
+LR_GAMMA = 0.9
 CLIP = 1
 BATCH_SIZE = 384
 EPOCHS = 20
 
+TRAIN_LOADER_PARAMETER = DataLoaderParameter(
+    batch_size=BATCH_SIZE,
+    n_workers=4,
+    pre_fetch_factor=8,
+)
+
+VAL_LOADER_PARAMETER = DataLoaderParameter(
+    batch_size=BATCH_SIZE,
+    n_workers=4,
+    pre_fetch_factor=8,
+)
+
 
 class Trainer:
     def __init__(self, data_directory: pathlib.Path):
-        self.data_directory = data_directory
-        self.raw_data_transformer = RawDataTransformer(data_directory)
-
-        self.vocab = self.raw_data_transformer.get_vocab()
-        self.src_dim = len(self.vocab)
-        self.trg_dim = len(self.vocab)
-        self.src_pad_idx = self.vocab[PADDING]
-        self.trg_pad_idx = self.vocab[PADDING]
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.data_loader = OneSentenceArrowLoader(
-            directory=self.data_directory,
-            train_n_workers=4,
-            train_batch_size=BATCH_SIZE,
-            train_pre_fetch_factor=8,
-            val_n_workers=4,
-            val_batch_size=BATCH_SIZE,
-            val_pre_fetch_factor=8,
-            device=self.device,
-            str_max_length=STR_MAX_LENGTH,
+        self.data_directory = data_directory
+        raw_data_transformer = RawDataTransformer(data_directory, test_size=TEST_SIZE)
+        self.data_loader = Seq2seqDataLoader(
+            raw_data_transformer,
+            TRAIN_LOADER_PARAMETER,
+            VAL_LOADER_PARAMETER,
+            self.device,
+            STR_MAX_LENGTH,
         )
+
+        self._vocab = self.data_loader.vocab
+        self._src_dim = len(self._vocab)
+        self._trg_dim = len(self._vocab)
+        self._src_pad_idx = self._vocab[PADDING]
+        self._trg_pad_idx = self._vocab[PADDING]
 
         self.model = None
         self.optimizer = None
@@ -97,7 +109,7 @@ class Trainer:
 
     def init_model(self):
         enc = Encoder(
-            self.src_dim,
+            self._src_dim,
             HID_DIM,
             ENC_LAYERS,
             ENC_HEADS,
@@ -107,7 +119,7 @@ class Trainer:
             STR_MAX_LENGTH,
         )
         dec = Decoder(
-            self.trg_dim,
+            self._trg_dim,
             HID_DIM,
             DEC_LAYERS,
             DEC_HEADS,
@@ -117,25 +129,22 @@ class Trainer:
             STR_MAX_LENGTH,
         )
         self.model = Seq2Seq(
-            enc, dec, self.src_pad_idx, self.trg_pad_idx, self.device
+            enc, dec, self._src_pad_idx, self._trg_pad_idx, self.device
         ).to(self.device)
         self.count_parameters(self.model)
         self.model.apply(self.initialize_weights)
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=LEARNING_RATE)
         self.lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(
-            self.optimizer, gamma=0.9
+            self.optimizer, gamma=LR_GAMMA
         )
-        self.criterion = nn.CrossEntropyLoss(ignore_index=self.trg_pad_idx)
+        self.criterion = nn.CrossEntropyLoss(ignore_index=self._trg_pad_idx)
         self.scaler = GradScaler()
 
     def process(self):
-        # torch.multiprocessing.set_start_method("spawn")
         self.init_model()
         best_valid_loss = float("inf")
         for epoch in range(EPOCHS):
-
             start_time = time.time()
-
             train_loss = self.train(
                 self.model,
                 self.data_loader,
@@ -174,7 +183,7 @@ class Trainer:
     def train(
         cls,
         model: Seq2Seq,
-        data_loader: OneSentenceArrowLoader,
+        data_loader: Seq2seqDataLoader,
         optimizer: torch.optim.Adam,
         lr_scheduler: torch.optim.lr_scheduler.ExponentialLR,
         criterion: CrossEntropyLoss,
@@ -187,7 +196,7 @@ class Trainer:
         for i, (src, trg) in enumerate(
             tqdm(
                 data_loader.train_loader,
-                total=round(data_loader.train_record_count / BATCH_SIZE),
+                total=round(len(data_loader.train_loader) / BATCH_SIZE),
             )
         ):
             # with profile(
@@ -223,13 +232,13 @@ class Trainer:
         if not skip_lr_sch:
             lr_scheduler.step()
         epoch_loss = epoch_loss.item()
-        return epoch_loss / data_loader.train_record_count * BATCH_SIZE
+        return epoch_loss / len(data_loader.train_loader) * BATCH_SIZE
 
     @classmethod
     def evaluate(
         cls,
         model: Seq2Seq,
-        data_loader: OneSentenceArrowLoader,
+        data_loader: Seq2seqDataLoader,
         criterion: CrossEntropyLoss,
         device: torch.device,
     ):
@@ -239,7 +248,7 @@ class Trainer:
             for i, (src, trg) in enumerate(
                 tqdm(
                     data_loader.val_loader,
-                    total=round(data_loader.val_record_count / BATCH_SIZE),
+                    total=round(len(data_loader.val_loader) / BATCH_SIZE),
                 )
             ):
                 src = src.to(device)
@@ -250,7 +259,7 @@ class Trainer:
                 trg = trg[:, 1:].contiguous().view(-1)
                 loss = criterion(output, trg)
                 epoch_loss += loss.item()
-        return epoch_loss / data_loader.val_record_count * BATCH_SIZE
+        return epoch_loss / len(data_loader.val_loader) * BATCH_SIZE
 
 
 if __name__ == "__main__":
