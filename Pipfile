@@ -22,6 +22,7 @@ torchdata = "*"
 torch-tb-profiler = "*"
 vaex = "*"
 vaex-core = "*"
+pyarrow = "*"
 
 [requires]
 python_version = "3.8"

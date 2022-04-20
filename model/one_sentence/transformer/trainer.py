@@ -13,9 +13,9 @@ from tqdm import tqdm
 
 from config import config
 from etl.etl_contants import TANG_SONG_SHI_DIRECTORY, PADDING
-from etl.one_sentence.components.vocab_loader import VocabLoader
-from etl.one_sentence.custom_iterable_dataset import CustomIterableDataset
 from etl.one_sentence.one_sentence_loader import OneSentenceLoader
+from etl.one_sentence_arrow.one_sentence_arrow_loader import OneSentenceArrowLoader
+from etl.one_sentence_arrow.raw_data_transformer import RawDataTransformer
 from model.one_sentence.transformer.net.decoder import Decoder
 from model.one_sentence.transformer.net.encoder import Encoder
 from model.one_sentence.transformer.net.seq2seq import Seq2Seq
@@ -41,14 +41,15 @@ EPOCHS = 20
 class Trainer:
     def __init__(self, data_directory: pathlib.Path):
         self.data_directory = data_directory
+        self.raw_data_transformer = RawDataTransformer(data_directory)
 
-        self.vocab = VocabLoader(CustomIterableDataset(data_directory)).load_model()
+        self.vocab = self.raw_data_transformer.get_vocab()
         self.src_dim = len(self.vocab)
         self.trg_dim = len(self.vocab)
         self.src_pad_idx = self.vocab[PADDING]
         self.trg_pad_idx = self.vocab[PADDING]
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.data_loader = OneSentenceLoader(
+        self.data_loader = OneSentenceArrowLoader(
             directory=self.data_directory,
             train_n_workers=4,
             train_batch_size=BATCH_SIZE,
@@ -129,7 +130,7 @@ class Trainer:
         self.scaler = GradScaler()
 
     def process(self):
-        torch.multiprocessing.set_start_method("spawn")
+        # torch.multiprocessing.set_start_method("spawn")
         self.init_model()
         best_valid_loss = float("inf")
         for epoch in range(EPOCHS):
@@ -174,7 +175,7 @@ class Trainer:
     def train(
         cls,
         model: Seq2Seq,
-        data_loader: OneSentenceLoader,
+        data_loader: OneSentenceArrowLoader,
         optimizer: torch.optim.Adam,
         lr_scheduler: torch.optim.lr_scheduler.ExponentialLR,
         criterion: CrossEntropyLoss,
@@ -229,7 +230,7 @@ class Trainer:
     def evaluate(
         cls,
         model: Seq2Seq,
-        data_loader: OneSentenceLoader,
+        data_loader: OneSentenceArrowLoader,
         criterion: CrossEntropyLoss,
         device: torch.device,
     ):
