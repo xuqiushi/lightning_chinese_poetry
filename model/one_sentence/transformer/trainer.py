@@ -13,7 +13,6 @@ from tqdm import tqdm
 
 from config import config
 from etl.etl_contants import TANG_SONG_SHI_DIRECTORY, PADDING
-from etl.one_sentence.one_sentence_loader import OneSentenceLoader
 from etl.one_sentence_arrow.one_sentence_arrow_loader import OneSentenceArrowLoader
 from etl.one_sentence_arrow.raw_data_transformer import RawDataTransformer
 from model.one_sentence.transformer.net.decoder import Decoder
@@ -124,7 +123,7 @@ class Trainer:
         self.model.apply(self.initialize_weights)
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=LEARNING_RATE)
         self.lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(
-            self.optimizer, gamma=0.8
+            self.optimizer, gamma=0.9
         )
         self.criterion = nn.CrossEntropyLoss(ignore_index=self.trg_pad_idx)
         self.scaler = GradScaler()
@@ -188,7 +187,7 @@ class Trainer:
         for i, (src, trg) in enumerate(
             tqdm(
                 data_loader.train_loader,
-                total=data_loader.train_record_count / BATCH_SIZE,
+                total=round(data_loader.train_record_count / BATCH_SIZE),
             )
         ):
             # with profile(
@@ -240,7 +239,7 @@ class Trainer:
             for i, (src, trg) in enumerate(
                 tqdm(
                     data_loader.val_loader,
-                    total=data_loader.val_record_count / BATCH_SIZE,
+                    total=round(data_loader.val_record_count / BATCH_SIZE),
                 )
             ):
                 src = src.to(device)
