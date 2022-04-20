@@ -20,8 +20,6 @@ tqdm = "*"
 sentencepiece = "*"
 torchdata = "*"
 torch-tb-profiler = "*"
-vaex = "*"
-vaex-core = "*"
 pyarrow = "*"
 
 [requires]

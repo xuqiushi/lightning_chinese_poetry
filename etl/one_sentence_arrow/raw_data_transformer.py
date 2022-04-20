@@ -1,4 +1,3 @@
-import csv
 import json
 import pathlib
 import re
@@ -6,7 +5,6 @@ from typing import Tuple, List
 
 import numpy as np
 import torch
-import vaex
 from lightning_fast.tools.path_tools.directory_changer import DirectoryChanger
 import pyarrow as pa
 from pyarrow import Table
