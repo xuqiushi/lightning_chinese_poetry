@@ -10,6 +10,7 @@ from lightning_fast.tools.path_tools.directory_changer import DirectoryChanger
 import pyarrow as pa
 from pyarrow import Table
 from sklearn.model_selection import train_test_split
+from sklearn.utils import shuffle
 from torchtext.vocab import build_vocab_from_iterator, Vocab
 from tqdm import tqdm
 
@@ -193,8 +194,9 @@ class BaseSeq2seqDataTransformer(metaclass=ABCMeta):
     def _save_train_val_df(self):
         raw_df = self.get_raw_df()
         vocab = self.get_vocab()
+        shuffled_index = shuffle(range(len(raw_df)))
         train_index, val_index, _, _ = train_test_split(
-            range(len(raw_df)), range(len(raw_df)), test_size=self._test_size
+            shuffled_index, shuffled_index, test_size=self._test_size
         )
         self._save_sub_df(raw_df, train_index, self._train_df_path, vocab)
         self._save_sub_df(raw_df, val_index, self._val_df_path, vocab)
