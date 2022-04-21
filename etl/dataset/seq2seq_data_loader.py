@@ -33,14 +33,13 @@ class Seq2seqDataLoader:
         self.train_loader = self._get_data_loader(train_df, train_loader_parameter)
         self.val_loader = self._get_data_loader(val_df, val_loader_parameter)
 
-    @classmethod
-    def _pad_collate(cls, batch):
+    def _pad_collate(self, batch):
         (xx, yy) = zip(*batch)
         # x_lens = [len(x) for x in xx]
         # y_lens = [len(y) for y in yy]
 
-        xx_pad = pad_sequence(xx, batch_first=True, padding_value=0)
-        yy_pad = pad_sequence(yy, batch_first=True, padding_value=0)
+        xx_pad = pad_sequence(xx, batch_first=True, padding_value=self.vocab[PADDING])
+        yy_pad = pad_sequence(yy, batch_first=True, padding_value=self.vocab[PADDING])
 
         return xx_pad, yy_pad
 
