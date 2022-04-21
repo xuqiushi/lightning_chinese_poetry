@@ -152,6 +152,8 @@ class Seq2seqTrainer:
             )
 
     def load_model(self, device=torch.device) -> Seq2Seq:
+        if self.model is None:
+            self.init_model()
         model = self.model.to(device)
         model.load_state_dict(
             torch.load(
