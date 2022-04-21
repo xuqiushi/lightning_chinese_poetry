@@ -29,7 +29,19 @@ TRAIN_PARAMETER = TrainParameter(
 
 
 class Trainer(Seq2seqTrainer):
-    pass
+    def __init__(self):
+        data_transformer = RawDataTransformer(
+            seq2seq_data_transformer_parameter=DATA_TRANSFORMER_PARAMETER
+        )
+        data_loader = Seq2seqDataLoader(
+            raw_data_transformer=data_transformer,
+            loader_parameter=DATA_LOADER_PARAMETER,
+        )
+        super().__init__(
+            seq2seq_data_loader=data_loader,
+            transformer_model_parameter=TRANSFORMER_MODEL_PARAMETER,
+            train_parameter=TRAIN_PARAMETER,
+        )
 
 
 if __name__ == "__main__":
@@ -37,17 +49,5 @@ if __name__ == "__main__":
     torch.autograd.profiler.profile(False)
     torch.autograd.profiler.emit_nvtx(False)
     # torch.backends.cudnn.benchmark = True
-
-    data_transformer = RawDataTransformer(
-        seq2seq_data_transformer_parameter=DATA_TRANSFORMER_PARAMETER
-    )
-    data_loader = Seq2seqDataLoader(
-        raw_data_transformer=data_transformer,
-        loader_parameter=DATA_LOADER_PARAMETER,
-    )
-    trainer = Trainer(
-        seq2seq_data_loader=data_loader,
-        transformer_model_parameter=TRANSFORMER_MODEL_PARAMETER,
-        train_parameter=TRAIN_PARAMETER,
-    )
+    trainer = Trainer()
     trainer.process()

@@ -151,6 +151,16 @@ class Seq2seqTrainer:
                 f"\t Val. Loss: {valid_loss:.3f} |  Val. PPL: {math.exp(valid_loss):7.3f}"
             )
 
+    def load_model(self, device=torch.device) -> Seq2Seq:
+        model = self.model.to(device)
+        model.load_state_dict(
+            torch.load(
+                self.model_path,
+                map_location=device,
+            )
+        )
+        return model
+
     @classmethod
     def train(
         cls,
