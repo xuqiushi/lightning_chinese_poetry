@@ -195,7 +195,7 @@ class Trainer:
         for i, (src, trg) in enumerate(
             tqdm(
                 data_loader.train_loader,
-                total=round(len(data_loader.train_loader) / BATCH_SIZE),
+                total=len(data_loader.train_loader),
             )
         ):
             # with profile(
@@ -231,7 +231,7 @@ class Trainer:
         if not skip_lr_sch:
             lr_scheduler.step()
         epoch_loss = epoch_loss.item()
-        return epoch_loss / len(data_loader.train_loader) * BATCH_SIZE
+        return epoch_loss / len(data_loader.train_loader)
 
     @classmethod
     def evaluate(
@@ -247,7 +247,7 @@ class Trainer:
             for i, (src, trg) in enumerate(
                 tqdm(
                     data_loader.val_loader,
-                    total=round(len(data_loader.val_loader) / BATCH_SIZE),
+                    total=len(data_loader.val_loader),
                 )
             ):
                 src = src.to(device)
@@ -258,7 +258,7 @@ class Trainer:
                 trg = trg[:, 1:].contiguous().view(-1)
                 loss = criterion(output, trg)
                 epoch_loss += loss.item()
-        return epoch_loss / len(data_loader.val_loader) * BATCH_SIZE
+        return epoch_loss / len(data_loader.val_loader)
 
 
 if __name__ == "__main__":
