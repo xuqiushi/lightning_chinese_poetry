@@ -50,7 +50,7 @@ class Seq2seqDataLoader:
         self, df: Table, data_loader_parameter: DataLoaderParameter
     ) -> DataLoader:
         dataset = ArrowDataset(df)
-        dataset = SequenceWrapper(dataset).map(self._transform)
+        dataset = SequenceWrapper(dataset, deepcopy=False).map(self._transform)
         return DataLoader(
             dataset,
             batch_size=data_loader_parameter.batch_size,
