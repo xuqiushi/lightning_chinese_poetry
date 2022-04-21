@@ -3,7 +3,6 @@ import json
 import pathlib
 from typing import Tuple, List
 
-import numpy as np
 import torch
 from lightning_fast.tools.path_tools.class_directory import ClassDirectory
 from lightning_fast.tools.path_tools.directory_changer import DirectoryChanger
@@ -165,19 +164,34 @@ class BaseSeq2seqDataTransformer(metaclass=ABCMeta):
                 sink,
                 schema,
             ) as writer:
+                count = 0
+                src_batch = []
+                trg_batch = []
                 for index in tqdm(select_index):
-                    src_batch = []
-                    trg_batch = []
-                    src_batch.append(
-                        vocab([BOS])
-                        + vocab(list(df_raw[cls.COLUMN_NAME_SRC][index].as_py()))
-                        + vocab([EOS])
-                    )
-                    trg_batch.append(
-                        vocab([BOS])
-                        + vocab(list(df_raw[cls.COLUMN_NAME_TRG][index].as_py()))
-                        + vocab([EOS])
-                    )
+                    if count < 100000:
+                        src_batch.append(
+                            vocab([BOS])
+                            + vocab(list(df_raw[cls.COLUMN_NAME_SRC][index].as_py()))
+                            + vocab([EOS])
+                        )
+                        trg_batch.append(
+                            vocab([BOS])
+                            + vocab(list(df_raw[cls.COLUMN_NAME_TRG][index].as_py()))
+                            + vocab([EOS])
+                        )
+                    else:
+                        batch = pa.record_batch(
+                            [
+                                pa.array(src_batch, type=pa.list_(pa.int64())),
+                                pa.array(trg_batch, type=pa.list_(pa.int64())),
+                            ],
+                            schema,
+                        )
+                        writer.write(batch)
+                        src_batch = []
+                        trg_batch = []
+                        count = 0
+                if src_batch and trg_batch:
                     batch = pa.record_batch(
                         [
                             pa.array(src_batch, type=pa.list_(pa.int64())),
