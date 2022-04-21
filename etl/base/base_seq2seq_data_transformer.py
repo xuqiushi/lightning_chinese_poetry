@@ -165,7 +165,7 @@ class BaseSeq2seqDataTransformer(metaclass=ABCMeta):
                 src_batch = []
                 trg_batch = []
                 for index in tqdm(select_index):
-                    if count < 100000:
+                    if count < 10000:
                         src_batch.append(
                             vocab([BOS])
                             + vocab(list(df_raw[cls.COLUMN_NAME_SRC][index].as_py()))

@@ -9,43 +9,22 @@ from model.base.seq2seq_trainer import Seq2seqTrainer
 from model.entity.train_parameter import TrainParameter
 from model.entity.transformer_model_parameter import TransformerModelParameter
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 STR_MAX_LENGTH = 100
 DATA_TRANSFORMER_PARAMETER = DataTransformerParameter(
     src_directory=TANG_SONG_SHI_DIRECTORY,
-    reset_tmp_file=False,
-    reset_vocab=False,
-    reset_train_val_df=False,
-    test_size=0.2,
 )
 DATA_LOADER_PARAMETER = DataLoaderParameter(
     train_batch_size=384,
-    train_n_workers=4,
-    train_pre_fetch_factor=8,
-    val_batch_size=384,
-    val_n_workers=4,
-    val_pre_fetch_factor=8,
     str_max_length=STR_MAX_LENGTH,
+    val_batch_size=384,
 )
 TRANSFORMER_MODEL_PARAMETER = TransformerModelParameter(
-    hid_dim=256,
-    enc_layers=3,
-    dec_layers=3,
-    enc_heads=8,
-    dec_heads=8,
-    enc_pf_dim=512,
-    dec_pf_dim=512,
-    enc_dropout=0.1,
-    dec_dropout=0.1,
     str_max_length=STR_MAX_LENGTH,
-    device=device,
+    device=DEVICE,
 )
 TRAIN_PARAMETER = TrainParameter(
-    device=device,
-    epochs=10,
-    clip=1,
-    learning_rate=0.001,
-    lr_gamma=0.8,
+    device=DEVICE,
 )
 
 
