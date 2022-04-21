@@ -154,9 +154,6 @@ class BaseSeq2seqDataTransformer(metaclass=ABCMeta):
         save_path: pathlib.Path,
         vocab: Vocab,
     ):
-        mask = np.zeros(len(df_raw), dtype=bool)
-        mask[select_index] = True
-        table: Table = df_raw.filter(pa.array(mask))
         schema = pa.schema(
             [
                 (cls.COLUMN_NAME_SRC, pa.list_(pa.int64())),
@@ -173,12 +170,12 @@ class BaseSeq2seqDataTransformer(metaclass=ABCMeta):
                     trg_batch = []
                     src_batch.append(
                         vocab([BOS])
-                        + vocab(list(table[cls.COLUMN_NAME_SRC][index].as_py()))
+                        + vocab(list(df_raw[cls.COLUMN_NAME_SRC][index].as_py()))
                         + vocab([EOS])
                     )
                     trg_batch.append(
                         vocab([BOS])
-                        + vocab(list(table[cls.COLUMN_NAME_TRG][index].as_py()))
+                        + vocab(list(df_raw[cls.COLUMN_NAME_TRG][index].as_py()))
                         + vocab([EOS])
                     )
                     batch = pa.record_batch(
