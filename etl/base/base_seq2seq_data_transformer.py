@@ -159,8 +159,8 @@ class BaseSeq2seqDataTransformer(metaclass=ABCMeta):
         table: Table = df_raw.filter(pa.array(mask))
         schema = pa.schema(
             [
-                (cls.COLUMN_NAME_SRC, pa.list_(pa.int32())),
-                (cls.COLUMN_NAME_TRG, pa.list_(pa.int32())),
+                (cls.COLUMN_NAME_SRC, pa.list_(pa.int64())),
+                (cls.COLUMN_NAME_TRG, pa.list_(pa.int64())),
             ]
         )
         with pa.OSFile(str(save_path), "wb") as sink:
@@ -184,8 +184,8 @@ class BaseSeq2seqDataTransformer(metaclass=ABCMeta):
                         )
                 batch = pa.record_batch(
                     [
-                        pa.array(src_batch, type=pa.list_(pa.int32())),
-                        pa.array(trg_batch, type=pa.list_(pa.int32())),
+                        pa.array(src_batch, type=pa.list_(pa.int64())),
+                        pa.array(trg_batch, type=pa.list_(pa.int64())),
                     ],
                     schema,
                 )

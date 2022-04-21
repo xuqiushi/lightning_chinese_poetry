@@ -44,16 +44,16 @@ class Seq2seqDataLoader:
 
         return xx_pad, yy_pad
 
-    def _transform(self, iter_item: Tuple[str, str]):
+    def _transform(self, iter_item: Tuple[int, int]):
         return self._t_sequential(iter_item[0]), self._t_sequential(iter_item[1])
 
     def _get_data_loader(
         self, df: Table, data_loader_parameter: DataLoaderParameter
     ) -> DataLoader:
-        train_dataset = ArrowDataset(df)
-        train_dataset = SequenceWrapper(train_dataset).map(self._transform)
+        dataset = ArrowDataset(df)
+        dataset = SequenceWrapper(dataset).map(self._transform)
         return DataLoader(
-            train_dataset,
+            dataset,
             batch_size=data_loader_parameter.batch_size,
             collate_fn=self._pad_collate,
             num_workers=data_loader_parameter.n_workers,
