@@ -168,28 +168,27 @@ class BaseSeq2seqDataTransformer(metaclass=ABCMeta):
                 sink,
                 schema,
             ) as writer:
-                src_batch = []
-                trg_batch = []
-                for batch in tqdm(table.to_batches()):
-                    for sub_index in range(len(batch)):
-                        src_batch.append(
-                            vocab([BOS])
-                            + vocab(list(batch[cls.COLUMN_NAME_SRC][sub_index].as_py()))
-                            + vocab([EOS])
-                        )
-                        trg_batch.append(
-                            vocab([BOS])
-                            + vocab(list(batch[cls.COLUMN_NAME_TRG][sub_index].as_py()))
-                            + vocab([EOS])
-                        )
-                batch = pa.record_batch(
-                    [
-                        pa.array(src_batch, type=pa.list_(pa.int64())),
-                        pa.array(trg_batch, type=pa.list_(pa.int64())),
-                    ],
-                    schema,
-                )
-                writer.write(batch)
+                for index in select_index:
+                    src_batch = []
+                    trg_batch = []
+                    src_batch.append(
+                        vocab([BOS])
+                        + vocab(list(table[cls.COLUMN_NAME_SRC][index].as_py()))
+                        + vocab([EOS])
+                    )
+                    trg_batch.append(
+                        vocab([BOS])
+                        + vocab(list(table[cls.COLUMN_NAME_TRG][index].as_py()))
+                        + vocab([EOS])
+                    )
+                    batch = pa.record_batch(
+                        [
+                            pa.array(src_batch, type=pa.list_(pa.int64())),
+                            pa.array(trg_batch, type=pa.list_(pa.int64())),
+                        ],
+                        schema,
+                    )
+                    writer.write(batch)
 
     def _save_train_val_df(self):
         raw_df = self.get_raw_df()

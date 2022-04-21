@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, List
 
 import torch
 import torchtext.transforms as torch_transform
@@ -27,7 +27,7 @@ class Seq2seqDataLoader:
         self.vocab = self._raw_data_transformer.get_vocab()
         self._t_sequential = torch_transform.Sequential(
             torch_transform.Truncate(str_max_length),
-            torch_transform.ToTensor(PADDING),
+            torch_transform.ToTensor(self.vocab[PADDING]),
         )
         train_df, val_df = self._raw_data_transformer.get_train_test()
         self.train_loader = self._get_data_loader(train_df, train_loader_parameter)
@@ -43,7 +43,7 @@ class Seq2seqDataLoader:
 
         return xx_pad, yy_pad
 
-    def _transform(self, iter_item: Tuple[int, int]):
+    def _transform(self, iter_item: Tuple[List[int], List[int]]):
         return self._t_sequential(iter_item[0]), self._t_sequential(iter_item[1])
 
     def _get_data_loader(
