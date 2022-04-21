@@ -16,6 +16,8 @@ DATA_TRANSFORMER_PARAMETER = DataTransformerParameter(
 )
 DATA_LOADER_PARAMETER = DataLoaderParameter(
     str_max_length=STR_MAX_LENGTH,
+    train_batch_size=128,
+    val_batch_size=128,
 )
 TRANSFORMER_MODEL_PARAMETER = TransformerModelParameter(
     str_max_length=STR_MAX_LENGTH,
