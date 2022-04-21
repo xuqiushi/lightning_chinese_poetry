@@ -210,10 +210,10 @@ class Trainer:
             for param in model.parameters():
                 param.grad = None
             with autocast(device.type):
-                output, _ = model(src, trg[:, :-1])
+                output, _ = model(src, trg)
             output_dim = output.shape[-1]
             output = output.contiguous().view(-1, output_dim)
-            trg = trg[:, 1:].contiguous().view(-1)
+            trg = trg.contiguous().view(-1)
             loss = criterion(output, trg)
             # loss.backward()
             scaler.scale(loss).backward()
@@ -252,10 +252,10 @@ class Trainer:
             ):
                 src = src.to(device)
                 trg = trg.to(device)
-                output, _ = model(src, trg[:, :-1])
+                output, _ = model(src, trg)
                 output_dim = output.shape[-1]
                 output = output.contiguous().view(-1, output_dim)
-                trg = trg[:, 1:].contiguous().view(-1)
+                trg = trg.contiguous().view(-1)
                 loss = criterion(output, trg)
                 epoch_loss += loss.item()
         return epoch_loss / len(data_loader.val_loader)
