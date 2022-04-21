@@ -2,11 +2,9 @@ import pathlib
 
 import torch
 
+from etl.dataset.seq2seq_data_loader import Seq2seqDataLoader
 from etl.etl_contants import TANG_SONG_SHI_DIRECTORY, BOS, PADDING, EOS
-from etl.one_sentence.components.vocab_loader import VocabLoader
-from etl.one_sentence.custom_iterable_dataset import CustomIterableDataset
-from etl.one_sentence.one_sentence_loader import OneSentenceLoader
-from model.one_sentence.lstm.net import Net
+from etl.one_sentence_arrow.raw_data_transformer import RawDataTransformer
 from model.one_sentence.transformer.net.decoder import Decoder
 from model.one_sentence.transformer.net.encoder import Encoder
 from model.one_sentence.transformer.net.seq2seq import Seq2Seq
@@ -23,32 +21,31 @@ from model.one_sentence.transformer.trainer import (
     HID_DIM,
     ENC_DROPOUT,
     DEC_DROPOUT,
+    TEST_SIZE,
+    TRAIN_LOADER_PARAMETER,
+    VAL_LOADER_PARAMETER,
 )
 
 
 class Predict:
     def __init__(self, data_directory: pathlib.Path):
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.data_directory = data_directory
-
-        self.vocab = VocabLoader(CustomIterableDataset(data_directory)).load_model()
+        raw_data_transformer = RawDataTransformer(data_directory, test_size=TEST_SIZE)
+        self.data_loader = Seq2seqDataLoader(
+            raw_data_transformer,
+            TRAIN_LOADER_PARAMETER,
+            VAL_LOADER_PARAMETER,
+            self.device,
+            STR_MAX_LENGTH,
+        )
+        self.vocab = self.data_loader.vocab
         self.src_dim = len(self.vocab)
         self.trg_dim = len(self.vocab)
         self.src_pad_idx = self.vocab[PADDING]
         self.trg_pad_idx = self.vocab[PADDING]
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.data_loader = OneSentenceLoader(
-            directory=self.data_directory,
-            train_n_workers=8,
-            train_batch_size=BATCH_SIZE,
-            train_pre_fetch_factor=16,
-            val_n_workers=8,
-            val_batch_size=BATCH_SIZE,
-            val_pre_fetch_factor=16,
-            device=self.device,
-            str_max_length=STR_MAX_LENGTH,
-        )
 
-    def predict_sentence(self, sentence, t_transform, vocab, device, max_len=100):
+    def predict_sentence(self, sentence, device, max_len=100):
         enc = Encoder(
             self.src_dim,
             HID_DIM,
@@ -79,13 +76,13 @@ class Predict:
             )
         )
         model.eval()
-        src_indexes = t_transform(sentence)
+        src_indexes = self.vocab([BOS]) + self.vocab(list(sentence)) + self.vocab([EOS])
         src_tensor = torch.LongTensor(src_indexes).unsqueeze(0).to(device)
         src_mask = model.make_src_mask(src_tensor)
 
         with torch.no_grad():
             enc_src = model.encoder(src_tensor, src_mask)
-        trg_indexes = [vocab[BOS]]
+        trg_indexes = [self.vocab[BOS]]
 
         for i in range(max_len):
             trg_tensor = torch.LongTensor(trg_indexes).unsqueeze(0).to(device)
@@ -96,26 +93,14 @@ class Predict:
                 )
             pred_token = output.argmax(2)[:, -1].item()
             trg_indexes.append(pred_token)
-            if pred_token == vocab[EOS]:
+            if pred_token == self.vocab[EOS]:
                 break
-        trg_tokens = [vocab.lookup_token(i) for i in trg_indexes]
+        trg_tokens = [self.vocab.lookup_token(i) for i in trg_indexes]
         return trg_tokens[1:]
 
 
 if __name__ == "__main__":
     test_device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    test_data_loader = OneSentenceLoader(
-        directory=TANG_SONG_SHI_DIRECTORY,
-        train_n_workers=8,
-        train_batch_size=BATCH_SIZE,
-        train_pre_fetch_factor=16,
-        val_n_workers=8,
-        val_batch_size=BATCH_SIZE,
-        val_pre_fetch_factor=16,
-        device=test_device,
-        str_max_length=STR_MAX_LENGTH,
-    )
-    vocab = VocabLoader(CustomIterableDataset(TANG_SONG_SHI_DIRECTORY)).load_model()
     SPACE = "\N{IDEOGRAPHIC SPACE}"
     EXCLA = "\N{FULLWIDTH EXCLAMATION MARK}"
     TILDE = "\N{FULLWIDTH TILDE}"
@@ -145,8 +130,6 @@ if __name__ == "__main__":
         predict_string = "".join(
             predictor.predict_sentence(
                 test_string,
-                test_data_loader.t_sequential,
-                test_data_loader.vocab,
                 test_device,
                 100,
             )

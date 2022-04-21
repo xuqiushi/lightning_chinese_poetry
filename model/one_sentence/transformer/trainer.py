@@ -15,7 +15,6 @@ from config import config
 from etl.dataset.seq2seq_data_loader import Seq2seqDataLoader
 from etl.entity.data_loader_parameter import DataLoaderParameter
 from etl.etl_contants import TANG_SONG_SHI_DIRECTORY, PADDING
-from etl.one_sentence_arrow.one_sentence_arrow_loader import OneSentenceArrowLoader
 from etl.one_sentence_arrow.raw_data_transformer import RawDataTransformer
 from model.one_sentence.transformer.net.decoder import Decoder
 from model.one_sentence.transformer.net.encoder import Encoder
