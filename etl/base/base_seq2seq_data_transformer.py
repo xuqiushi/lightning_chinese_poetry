@@ -14,6 +14,7 @@ from torchtext.vocab import build_vocab_from_iterator, Vocab
 from tqdm import tqdm
 
 from etl.entity.poetry import Poetry
+from etl.entity.seq2seq.data_transformer_parameter import DataTransformerParameter
 from etl.etl_contants import UNKNOWN, BOS, PADDING, EOS
 from config import config
 
@@ -24,21 +25,17 @@ class BaseSeq2seqDataTransformer(metaclass=ABCMeta):
 
     def __init__(
         self,
-        src_directory: pathlib.Path,
-        reset_tmp_file: bool = False,
-        reset_vocab: bool = False,
-        reset_train_val_df: bool = False,
-        test_size: float = 0.2,
+        seq2seq_data_transformer_parameter: DataTransformerParameter,
     ):
-        self._src_directory = src_directory
+        self._src_directory = seq2seq_data_transformer_parameter.src_directory
         self._raw_tmp_data_path = self.class_tmp_directory / "raw_tmp_data.arrow"
         self._vocab_path = self.class_data_directory / "vocab.pt"
         self._train_df_path = self.class_data_directory / "train.arrow"
         self._val_df_path = self.class_data_directory / "val.arrow"
-        self._reset_tmp_file = reset_tmp_file
-        self._reset_vocab = reset_vocab
-        self._reset_train_val_df = reset_train_val_df
-        self._test_size = test_size
+        self._reset_tmp_file = seq2seq_data_transformer_parameter.reset_tmp_file
+        self._reset_vocab = seq2seq_data_transformer_parameter.reset_vocab
+        self._reset_train_val_df = seq2seq_data_transformer_parameter.reset_train_val_df
+        self._test_size = seq2seq_data_transformer_parameter.test_size
 
     def get_raw_df(self) -> Table:
         """
@@ -133,7 +130,7 @@ class BaseSeq2seqDataTransformer(metaclass=ABCMeta):
     def _save_vocab(self):
         def _vocab_iter():
             raw_df = self.get_raw_df()
-            for record_index in range(len(raw_df)):
+            for record_index in range(raw_df.shape[0]):
                 yield list(raw_df[self.COLUMN_NAME_SRC][record_index].as_py())
                 yield list(raw_df[self.COLUMN_NAME_TRG][record_index].as_py())
 
