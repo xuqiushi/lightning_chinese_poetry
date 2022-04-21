@@ -165,7 +165,7 @@ class BaseSeq2seqDataTransformer(metaclass=ABCMeta):
                 sink,
                 schema,
             ) as writer:
-                for index in select_index:
+                for index in tqdm(select_index):
                     src_batch = []
                     trg_batch = []
                     src_batch.append(
