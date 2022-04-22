@@ -1,11 +1,10 @@
-import re
 from typing import List
 
 
 from etl.base.base_seq2seq_data_transformer import BaseSeq2seqDataTransformer
 from etl.entity.poetry import Poetry
 from etl.entity.seq2seq.data_transformer_parameter import DataTransformerParameter
-from etl.etl_contants import TANG_SONG_SHI_DIRECTORY, CH_SEP
+from etl.etl_contants import TANG_SONG_SHI_DIRECTORY, CH_SEP, POETRY_END
 
 
 class SentencesDataTransformer(BaseSeq2seqDataTransformer):
@@ -18,6 +17,7 @@ class SentencesDataTransformer(BaseSeq2seqDataTransformer):
                 trg = "".join(poetry.paragraphs[split_index:split_index + 1])
                 src_batch.append(src)
                 trg_batch.append(trg)
+            trg_batch[-1] += POETRY_END
 
 
 if __name__ == "__main__":

@@ -1,3 +1,4 @@
+import re
 from abc import ABCMeta, abstractmethod
 import json
 import pathlib
@@ -15,13 +16,16 @@ from tqdm import tqdm
 
 from etl.entity.poetry import Poetry
 from etl.entity.seq2seq.data_transformer_parameter import DataTransformerParameter
-from etl.etl_contants import UNKNOWN, BOS, PADDING, EOS
+from etl.etl_contants import UNKNOWN, BOS, PADDING, EOS, POETRY_END
 from config import config
 
 
 class BaseSeq2seqDataTransformer(metaclass=ABCMeta):
     COLUMN_NAME_SRC = "src"
     COLUMN_NAME_TRG = "trg"
+    TOKEN_CAUGHT_PATTERN = re.compile(
+        fr"([\u4e00-\u9fa5]|{'|'.join([UNKNOWN, BOS, PADDING, EOS, POETRY_END, '.'])})"
+    )  # r'([\u4e00-\u9fa5]|<unk>|<bos>|<padding>|<eos>|.)'
 
     def __init__(
         self,
@@ -101,6 +105,10 @@ class BaseSeq2seqDataTransformer(metaclass=ABCMeta):
             config.directories.tmp_dir,
         )
 
+    @classmethod
+    def _sentence_tokenize(cls, sentence: str) -> List[str]:
+        return cls.TOKEN_CAUGHT_PATTERN.findall(sentence)
+
     def _save_raw_tmp_data(self) -> None:
         schema = pa.schema(
             [(self.COLUMN_NAME_SRC, pa.string()), (self.COLUMN_NAME_TRG, pa.string())]
@@ -128,15 +136,19 @@ class BaseSeq2seqDataTransformer(metaclass=ABCMeta):
                     writer.write(batch)
 
     def _save_vocab(self):
-        def _vocab_iter():
-            raw_df = self.get_raw_df()
-            for record_index in range(raw_df.shape[0]):
-                yield list(raw_df[self.COLUMN_NAME_SRC][record_index].as_py())
-                yield list(raw_df[self.COLUMN_NAME_TRG][record_index].as_py())
+        def _vocab_iter(df):
+            for record_index in range(df.shape[0]):
+                yield self._sentence_tokenize(
+                    df[self.COLUMN_NAME_SRC][record_index].as_py()
+                )
+                yield self._sentence_tokenize(
+                    df[self.COLUMN_NAME_TRG][record_index].as_py()
+                )
 
+        raw_df = self.get_raw_df()
         vocab = build_vocab_from_iterator(
-            tqdm(_vocab_iter()),
-            specials=[UNKNOWN, BOS, PADDING, EOS],
+            tqdm(_vocab_iter(raw_df), total=raw_df.shape[0]),
+            specials=[UNKNOWN, BOS, PADDING, EOS, POETRY_END],
             special_first=True,
         )
         vocab.set_default_index(vocab[UNKNOWN])
@@ -168,12 +180,20 @@ class BaseSeq2seqDataTransformer(metaclass=ABCMeta):
                     if count < 10000:
                         src_batch.append(
                             vocab([BOS])
-                            + vocab(list(df_raw[cls.COLUMN_NAME_SRC][index].as_py()))
+                            + vocab(
+                                cls._sentence_tokenize(
+                                    df_raw[cls.COLUMN_NAME_SRC][index].as_py()
+                                )
+                            )
                             + vocab([EOS])
                         )
                         trg_batch.append(
                             vocab([BOS])
-                            + vocab(list(df_raw[cls.COLUMN_NAME_TRG][index].as_py()))
+                            + vocab(
+                                cls._sentence_tokenize(
+                                    df_raw[cls.COLUMN_NAME_TRG][index].as_py()
+                                )
+                            )
                             + vocab([EOS])
                         )
                     else:
