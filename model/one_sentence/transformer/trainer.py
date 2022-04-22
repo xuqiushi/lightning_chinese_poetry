@@ -15,9 +15,9 @@ DATA_TRANSFORMER_PARAMETER = DataTransformerParameter(
     src_directory=TANG_SONG_SHI_DIRECTORY,
 )
 DATA_LOADER_PARAMETER = DataLoaderParameter(
-    train_batch_size=256,
+    train_batch_size=320,
     str_max_length=STR_MAX_LENGTH,
-    val_batch_size=256,
+    val_batch_size=320,
 )
 TRANSFORMER_MODEL_PARAMETER = TransformerModelParameter(
     enc_layers=3,
