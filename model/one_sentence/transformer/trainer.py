@@ -25,6 +25,8 @@ TRANSFORMER_MODEL_PARAMETER = TransformerModelParameter(
 )
 TRAIN_PARAMETER = TrainParameter(
     device=DEVICE,
+    epochs=20,
+    learning_rate=0.0001,
 )
 
 
