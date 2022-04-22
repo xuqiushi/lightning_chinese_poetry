@@ -10,14 +10,14 @@ from model.entity.train_parameter import TrainParameter
 from model.entity.transformer_model_parameter import TransformerModelParameter
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-STR_MAX_LENGTH = 500
+STR_MAX_LENGTH = 300
 DATA_TRANSFORMER_PARAMETER = DataTransformerParameter(
     src_directory=TANG_SONG_SHI_DIRECTORY,
 )
 DATA_LOADER_PARAMETER = DataLoaderParameter(
     str_max_length=STR_MAX_LENGTH,
-    train_batch_size=128,
-    val_batch_size=128,
+    train_batch_size=96,
+    val_batch_size=96,
 )
 TRANSFORMER_MODEL_PARAMETER = TransformerModelParameter(
     str_max_length=STR_MAX_LENGTH,
