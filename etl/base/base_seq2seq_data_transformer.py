@@ -106,7 +106,7 @@ class BaseSeq2seqDataTransformer(metaclass=ABCMeta):
         )
 
     @classmethod
-    def _sentence_tokenize(cls, sentence: str) -> List[str]:
+    def sentence_tokenize(cls, sentence: str) -> List[str]:
         return cls.TOKEN_CAUGHT_PATTERN.findall(sentence)
 
     def _save_raw_tmp_data(self) -> None:
@@ -138,10 +138,10 @@ class BaseSeq2seqDataTransformer(metaclass=ABCMeta):
     def _save_vocab(self):
         def _vocab_iter(df):
             for record_index in range(df.shape[0]):
-                yield self._sentence_tokenize(
+                yield self.sentence_tokenize(
                     df[self.COLUMN_NAME_SRC][record_index].as_py()
                 )
-                yield self._sentence_tokenize(
+                yield self.sentence_tokenize(
                     df[self.COLUMN_NAME_TRG][record_index].as_py()
                 )
 
@@ -181,7 +181,7 @@ class BaseSeq2seqDataTransformer(metaclass=ABCMeta):
                         src_batch.append(
                             vocab([BOS])
                             + vocab(
-                                cls._sentence_tokenize(
+                                cls.sentence_tokenize(
                                     df_raw[cls.COLUMN_NAME_SRC][index].as_py()
                                 )
                             )
@@ -190,7 +190,7 @@ class BaseSeq2seqDataTransformer(metaclass=ABCMeta):
                         trg_batch.append(
                             vocab([BOS])
                             + vocab(
-                                cls._sentence_tokenize(
+                                cls.sentence_tokenize(
                                     df_raw[cls.COLUMN_NAME_TRG][index].as_py()
                                 )
                             )
