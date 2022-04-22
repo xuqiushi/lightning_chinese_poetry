@@ -20,13 +20,17 @@ DATA_LOADER_PARAMETER = DataLoaderParameter(
     val_batch_size=256,
 )
 TRANSFORMER_MODEL_PARAMETER = TransformerModelParameter(
+    enc_layers=6,
+    dec_layers=6,
+    enc_heads=16,
+    dec_heads=16,
     str_max_length=STR_MAX_LENGTH,
     device=DEVICE,
 )
 TRAIN_PARAMETER = TrainParameter(
     device=DEVICE,
-    epochs=20,
-    learning_rate=0.0001,
+    epochs=10,
+    learning_rate=0.001,
 )
 
 
